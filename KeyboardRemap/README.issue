@@ -1,0 +1,4 @@
+Hi future me,
+this projects need a little more work to be shippable.
+it doesn't package correctly into exe. See Ahk2exe and FileInstall (in library import)
+GL!

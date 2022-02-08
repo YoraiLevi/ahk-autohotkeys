@@ -20,12 +20,15 @@ isLeftToRight(){
     }
 }
 
-Volume_Mute::F1
-Volume_Down::F2
-Volume_Up::F3
+; Volume_Mute::F1
+; Volume_Down::F2
+; Volume_Up::F3
 F1::Volume_Mute
 F2::Volume_Down
 F3::Volume_Up
+#F1::F1
+#F2::F2
+#F3::F3
 
 ; Arrow keys
 *>^Up::Send {Blind}{RControl Up}{PgUp}{RControl Down}

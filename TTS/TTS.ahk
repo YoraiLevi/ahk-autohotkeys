@@ -1,21 +1,21 @@
 ﻿#Include ENV.ahk
 #Include Clipboard.ahk
 ; #c::
-; EL =
-; GetSelectedText()
-; MsgBox %selection%
+; 	EL =
+; 	GetSelectedText()
+;     MsgBox %selection%
 ; return
 #q::
-    EL =
-    GetSelectedText()
+	EL =
+	GetSelectedText()
     ; MsgBox %selection%
-    Read(selection,"Microsoft Eva Mobile",1)
+	Read(TextCleanup(selection),"Microsoft Eva Mobile",1)
 return
 #w::
-    EL =
-    GetSelectedText()
+	EL =
+	GetSelectedText()
     ; MsgBox %selection%
-    Read(selection,"VE_Hebrew_Carmit_22kHz",1)
+	Read(TextCleanup(selection),"VE_Hebrew_Carmit_22kHz",1)
 return
 ;   -l              : print list of voices
 ;   -s <integer>    : speed of speech (from -10 to 10)
@@ -27,12 +27,19 @@ return
 ;   -ka             : kill active copy of application
 ;   -pr             : pause or resume reading by active copy of application
 ;   -q              : add application to queue
-
-Read(transcript,voice,speed=0,pitch=0,volume=100,pause_sentence=0,pause_paragraphs=0){
-    ; see local ids:
-    ; https://www.science.co.il/language/Locale-codes.php
-    ; MsgBox speed: %speed% \n pitch: %pitch% \n volume: %volume% \n voice: %voice%
-    args = -k -s "%speed%" -p "%pitch%" -v "%volume%" -n "%voice%" -t """%transcript%"""
-    Run, balcon\balcon.exe %args%,,Hide
+TextCleanup(string){
+	quote = "
+	StringReplace, string, string, %quote%, , All
+	StringReplace, string, string, ', , All
+	StringReplace, string, string, `, , All
+	; MsgBox, %string%
+	return string
 }
-
+Read(transcript,voice,speed=0,pitch=0,volume=100,pause_sentence=0,pause_paragraphs=0){
+	; see local ids:
+	; https://www.science.co.il/language/Locale-codes.php
+	; MsgBox speed: %speed% \n pitch: %pitch% \n volume: %volume% \n voice: %voice%
+	args = -ka -s "%speed%" -p "%pitch%" -v "%volume%" -n "%voice%" -t """%transcript%"""
+	; MsgBox, %args%
+	Run, balcon\balcon.exe %args%,,Hide
+}

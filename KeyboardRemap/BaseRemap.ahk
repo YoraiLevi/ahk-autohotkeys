@@ -26,9 +26,9 @@ isLeftToRight(){
 F1::Volume_Mute
 F2::Volume_Down
 F3::Volume_Up
-#F1::F1
-#F2::F2
-#F3::F3
+#F1::Send {F1}
+#F2::Send {F2}
+#F3::Send {F3}
 
 ; Arrow keys
 *>^Up::Send {Blind}{RControl Up}{PgUp}{RControl Down}

@@ -1,0 +1,50 @@
+name: Building release for AHK scripts
+
+on: push
+
+jobs:
+  AHK:
+    name: Building AHK
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Ahk2Exe TTS
+        uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
+        with:
+          in: .\ahk\TTS\main.ahk
+#           out: $PWD\main.exe
+
+      - name: Ahk2Exe BaseRemap
+        uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
+        with:
+          in: .\ahk\KeyboardRemap\BaseRemap.ahk
+#           out: $PWD\BaseRemap.exe
+
+      - name: Ahk2Exe Vivobook_ASUSLaptop TP412FAC_TP412FA Remap
+        uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
+        with:
+          in: .\ahk\KeyboardRemap\Vivobook_ASUSLaptop TP412FAC_TP412FA.ahk
+#           out: $PWD\Vivobook_ASUSLaptop TP412FAC_TP412FA.exe
+          
+      - name: Tree output
+        run: tree /F
+
+      - name: Get Current date https://stackoverflow.com/a/60942437/12603110
+        id: date
+        # This is bash for some reason.
+        run: echo "::set-output name=date::$(date +'%d%m%Y')"
+
+
+      - name: Releasing...
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ steps.date.outputs.date }}
+          tag_name: ${{ steps.date.outputs.date }}
+          files: |
+            ahk/TTS/main.exe
+            ahk/KeyboardRemap/BaseRemap.exe
+            ahk/KeyboardRemap/Vivobook_ASUSLaptop TP412FAC_TP412FA.exe
+        # env:
+          # GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

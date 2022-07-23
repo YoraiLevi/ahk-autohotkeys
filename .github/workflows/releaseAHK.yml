@@ -13,19 +13,19 @@ jobs:
       - name: Ahk2Exe TTS
         uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
-          in: .\ahk\TTS\main.ahk
+          in: .\TTS\main.ahk
 #           out: $PWD\main.exe
 
       - name: Ahk2Exe BaseRemap
         uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
-          in: .\ahk\KeyboardRemap\BaseRemap.ahk
+          in: .\KeyboardRemap\BaseRemap.ahk
 #           out: $PWD\BaseRemap.exe
 
       - name: Ahk2Exe Vivobook_ASUSLaptop TP412FAC_TP412FA Remap
         uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
-          in: .\ahk\KeyboardRemap\Vivobook_ASUSLaptop TP412FAC_TP412FA.ahk
+          in: .\KeyboardRemap\Vivobook_ASUSLaptop TP412FAC_TP412FA.ahk
 #           out: $PWD\Vivobook_ASUSLaptop TP412FAC_TP412FA.exe
           
       - name: Tree output
@@ -43,8 +43,8 @@ jobs:
           name: ${{ steps.date.outputs.date }}
           tag_name: ${{ steps.date.outputs.date }}
           files: |
-            ahk/TTS/main.exe
-            ahk/KeyboardRemap/BaseRemap.exe
-            ahk/KeyboardRemap/Vivobook_ASUSLaptop TP412FAC_TP412FA.exe
+            TTS/main.exe
+            KeyboardRemap/BaseRemap.exe
+            KeyboardRemap/Vivobook_ASUSLaptop TP412FAC_TP412FA.exe
         # env:
           # GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

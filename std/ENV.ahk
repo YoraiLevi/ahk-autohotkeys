@@ -5,3 +5,5 @@ SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
 #SingleInstance force
 SetBatchLines, -1 
 SetKeyDelay, -1 
+#InstallKeybdHook
+#UseHook On

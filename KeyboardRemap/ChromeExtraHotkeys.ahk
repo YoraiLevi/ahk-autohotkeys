@@ -28,6 +28,7 @@ WinWaitCreated( WinTitle:="", WinText:="", Seconds:=0, ExcludeTitle:="", Exclude
     WinWait % "ahk_id " Found := WinText ; wait for window to be shown
 }
 
+^f::^g ; traverse search results with ctrl+f
 ^g::Send {CtrlDown}{t}{CtrlUp}{AltDown}{g}{AltUp}{CtrlDown} ; Alt + G - new tab in new group
 ^t::Send {CtrlUp}{AltDown}{t}{AltUp}{CtrlDown} ; Ctrl + T - new tab in this group, this is required for ^g to work
 ; !t::Send {AltUp}{CtrlDown}{t}{CtrlUp}{AltDown}{g} ; Alt + T - new tab in new group

@@ -29,10 +29,9 @@ return
 ;   -q              : add application to queue
 TextCleanup(string){
 	quote = "
-	StringReplace, string, string, %quote%, , All
-	StringReplace, string, string, ', , All
-	StringReplace, string, string, `, , All
-	; MsgBox, %string%
+	StringReplace, string, string, %quote%	, , All
+	StringReplace, string, string, '		, , All
+	StringReplace, string, string, `,		, , All ;escape comma
 	return string
 }
 Read(transcript,voice,speed=0,pitch=0,volume=100,pause_sentence=0,pause_paragraphs=0){

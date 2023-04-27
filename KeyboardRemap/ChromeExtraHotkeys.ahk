@@ -36,16 +36,26 @@ WinWaitCreated( WinTitle:="", WinText:="", Seconds:=0, ExcludeTitle:="", Exclude
 ^/::Send ^0{CtrlDown}
 ^\::
     WinGet, winid ,, A
-    WinMaximize ahk_id %winid%
-    Send {LWinDown}{Left}{LWinUp}
-    sleep, 200
     WinActivate ahk_id %winid%
     Send {CtrlDown}{n}{CtrlUp}{AltDown}{g}{AltUp}
     WinWaitCreated("ahk_exe msedge.exe")
-    sleep, 100
-    WinMaximize A
-    Send {LWinDown}{Right}{LWinUp}
-    sleep, 100
-    Send {CtrlUp}{AltUp}{ShiftUp}{LWinUp}
+    WinGet, new_winid ,, A
+    Gosub, GetCurrentMonitorWorkArea
+    WinGet, MinMaxState, MinMax, ahk_id %winid%
+    if (MinMaxState = 1)	; window is maximized
+      WinRestore, ahk_id %winid%	; unmaximize it
+    WinMove, ahk_id %winid%,, _Left-10, _Top, _Width//2+20, _Height+10 ; move left
+    WinGet, MinMaxState, MinMax, ahk_id %new_winid%
+    if (MinMaxState = 1)	; window is maximized
+      WinRestore, ahk_id %new_winid%	; unmaximize it
+    WinMove, ahk_id %new_winid%,, _Width//2-10, _Top, _Width//2+20, _Height+10 ; move right
     Return
 #If
+
+;---------------------------------------------------------------------------
+GetCurrentMonitorWorkArea:
+;---------------------------------------------------------------------------
+    SysGet, _, MonitorWorkArea
+    _Width  := _Right - _Left
+    _Height := _Bottom - _Top
+Return

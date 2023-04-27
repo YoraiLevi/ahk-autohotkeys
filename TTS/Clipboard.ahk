@@ -5,6 +5,7 @@ GetSelectedText() {
     Clipboard = ; clear (c)
     sleep 50
     Sendinput ^c ; (simute)) Ctrl+C (=selection in clipboard)
+    sleep 50
     ClipWait, 0, 1 ; wait until clipboard contains data
     EL := ErrorLevel ; Zero if clipboard not empty, else one
     if (EL = 0) {

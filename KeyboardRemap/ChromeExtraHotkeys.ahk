@@ -29,11 +29,11 @@ WinWaitCreated( WinTitle:="", WinText:="", Seconds:=0, ExcludeTitle:="", Exclude
 }
 
 ^f::^g ; traverse search results with ctrl+f
-^g::Send {CtrlDown}{t}{CtrlUp}{AltDown}{g}{AltUp}{CtrlDown} ; Alt + G - new tab in new group
-^t::Send {CtrlUp}{AltDown}{t}{AltUp}{CtrlDown} ; Ctrl + T - new tab in this group, this is required for ^g to work
+^g::Send {CtrlDown}{t}{CtrlUp}{AltDown}{g}{AltUp} ; Alt + G - new tab in new group
+^t::Send {CtrlUp}{AltDown}{t}{AltUp} ; Ctrl + T - new tab in this group, this is required for ^g to work
 ; !t::Send {AltUp}{CtrlDown}{t}{CtrlUp}{AltDown}{g} ; Alt + T - new tab in new group
-^n::Send {CtrlDown}{n}{CtrlUp}{AltDown}{g}{AltUp}{CtrlDown} ; Ctrl + N - new window in new group
-^/::Send ^0{CtrlDown}
+^n::Send {CtrlDown}{n}{CtrlUp}{AltDown}{g}{AltUp} ; Ctrl + N - new window in new group
+^/::Send ^0
 ^\::
     WinGet, winid ,, A
     WinActivate ahk_id %winid%

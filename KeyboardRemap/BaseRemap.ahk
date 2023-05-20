@@ -40,6 +40,8 @@ F3::Volume_Up
         Send {Blind}{RControl Up}{Home}{RControl Down}
     else
         Send {Blind}{RControl Up}{End}{RControl Down}
+    KeyWait, RControl
+    Send {Blind}{RControl Up}
 return
 
 *>^Right::
@@ -47,4 +49,6 @@ return
         Send {Blind}{RControl Up}{End}{RControl Down}
     else
         Send {Blind}{RControl Up}{Home}{RControl Down}
+    KeyWait, RControl
+    Send {Blind}{RControl Up}
 Return

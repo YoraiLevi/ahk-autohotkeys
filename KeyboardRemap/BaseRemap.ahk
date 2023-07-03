@@ -1,5 +1,4 @@
 #Include ../std/ENV.ahk
-#Include ./ChromeExtraHotkeys.ahk
 #Include KeyboardLayout.ahk
 ; https://www.autohotkey.com/board/topic/55921-multiple-keyboards-workaround/
 ; Laptop top row, passthrough for modifiers

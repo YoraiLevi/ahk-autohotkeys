@@ -23,27 +23,43 @@ isLeftToRight(){
 ; Volume_Mute::F1
 ; Volume_Down::F2
 ; Volume_Up::F3
-F1::Volume_Mute
-F2::Volume_Down
-F3::Volume_Up
+F1::Send {Volume_Mute}
+F2::Send {Volume_Down}
+F3::Send {Volume_Up}
 #F1::Send {F1}
 #F2::Send {F2}
 #F3::Send {F3}
 
 ; Arrow keys
-*>^Up::Send {Blind}{RControl Up}{PgUp}{RControl Down}
-*>^Down::Send {Blind}{RControl Up}{PgDn}{RControl Down}
+>^Up::Send {PgUp}
++>^Up::Send +{PgUp}
+>^Down::Send {PgDn}
++>^Down::Send +{PgDn}
 
-*>^Left::
+>^Left::
     if isLeftToRight()
-        Send {Blind}{RControl Up}{Home}{RControl Down}
+        Send {Home}
     else
-        Send {Blind}{RControl Up}{End}{RControl Down}
+        Send {End}
 return
 
-*>^Right::
++>^Left::
     if isLeftToRight()
-        Send {Blind}{RControl Up}{End}{RControl Down}
+        Send +{Home}
     else
-        Send {Blind}{RControl Up}{Home}{RControl Down}
+        Send +{End}
+return
+
+>^Right::
+    if isLeftToRight()
+        Send {End}
+    else
+        Send {Home}
+Return
+
++>^Right::
+    if isLeftToRight()
+        Send +{End}
+    else
+        Send +{Home}
 Return

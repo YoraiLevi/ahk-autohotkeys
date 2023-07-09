@@ -33,9 +33,10 @@ isLeftToRight(){
 F1::Send {Volume_Mute}
 F2::Send {Volume_Down}
 F3::Send {Volume_Up}
-#F1::Send {F1}
-#F2::Send {F2}
-#F3::Send {F3}
+; compatible with mouse without borders
+#F1::F1
+#F2::F2
+#F3::F3
 
 ; Arrow keys
 >^Up::Send {PgUp}

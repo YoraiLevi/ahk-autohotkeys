@@ -12,7 +12,7 @@ foreach ($artifact in $artifacts) {
     # $path = [Environment]::GetFolderPath(([Environment+SpecialFolder]::Startup))
     $path = $ENV:UserProfile+"\"+"bin"; mkdir -p $path -ErrorAction SilentlyContinue
     $file_path = $path+"\"+$artifact
-    Write- Downloading
+    Write-Information "Downloading $artifact to $file_path"
     Invoke-WebRequest -Uri $url -OutFile $file_path
 }
 ```

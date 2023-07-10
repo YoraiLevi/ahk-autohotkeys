@@ -36,9 +36,8 @@ jobs:
         # This is bash for some reason.
         run: |
           $tag = (Get-Date -UFormat '%FT%T.%SZ') -replace '[\?\~\^\:\*\[\]\.\@]','-'
-          echo "::set-output name=date::$tag"
-
-
+          echo ""date=$tag" >> $GITHUB_OUTPUT"
+          
       - name: Releasing...
         uses: softprops/action-gh-release@v1
         with:

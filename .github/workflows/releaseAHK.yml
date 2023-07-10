@@ -35,8 +35,7 @@ jobs:
         id: date
         # This is bash for some reason.
         run: |
-          dtz=$(date -u +'%FT%T.%2NZ')
-          tag=${dtz//[\?\~\^\:\*\[\]\.\@]/-}
+          $tag = (Get-Date -UFormat '%FT%T.%SZ') -replace '[\?\~\^\:\*\[\]\.\@]','-'
           echo "::set-output name=date::$tag"
 
 

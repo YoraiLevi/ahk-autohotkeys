@@ -45,8 +45,8 @@ $#F3::F3
     ; ToolTip, % "RControl " rctrl_state
 return
 ~*LControl::
-    MouseGetPos,,,guideUnderCursor
-    WinActivate, ahk_id %guideUnderCursor% ; activate the window under the cursor
+    ; MouseGetPos,,,guideUnderCursor
+    ; WinActivate, ahk_id %guideUnderCursor% ; activate the window under the cursor
 ~*LControl Up::
     lctrl_state := GetKeyState("LCtrl")
     ; ToolTip, % "LControl " lctrl_state

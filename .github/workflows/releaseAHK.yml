@@ -31,10 +31,10 @@ jobs:
       - name: Tree output
         run: tree /F
 
-      - name: Get Current date https://stackoverflow.com/a/60942437/12603110
+      - name: Get Current date https://stackoverflow.com/a/60942437/12603110 https://stackoverflow.com/a/49766437/12603110
         id: date
         # This is bash for some reason.
-        run: echo "::set-output name=date::$(date +'%d%m%Y')"
+        run: echo "::set-output name=date::$(date -u +'%FT%T.%2NZ')"
 
 
       - name: Releasing...

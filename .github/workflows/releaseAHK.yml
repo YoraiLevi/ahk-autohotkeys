@@ -34,7 +34,10 @@ jobs:
       - name: Get Current date https://stackoverflow.com/a/60942437/12603110 https://stackoverflow.com/a/49766437/12603110
         id: date
         # This is bash for some reason.
-        run: echo "::set-output name=date::$(date -u +'%FT%T.%2NZ')"
+        run: |
+          dtz=$(date -u +'%FT%T.%2NZ')
+          tag=${dtz//[\?\~\^\:\*\[\]\.\@]/-}
+          echo "::set-output name=date::$tag"
 
 
       - name: Releasing...

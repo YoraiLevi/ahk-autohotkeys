@@ -1,5 +1,7 @@
 #Include ../std/ENV.ahk
 #Include KeyboardLayout.ahk
+#Persistent
+
 ; https://www.autohotkey.com/board/topic/55921-multiple-keyboards-workaround/
 ; Laptop top row, passthrough for modifiers
 
@@ -26,7 +28,6 @@ isLeftToRight(){
         ; msgbox, Language is HE
     }
 }
-#MenuMaskKey vkEFF
 ; Volume_Mute::F1
 ; Volume_Down::F2
 ; Volume_Up::F3
@@ -38,43 +39,64 @@ $#F1::F1
 $#F2::F2
 $#F3::F3
 
-; Arrow keys
-$>^Up::Send {PgUp}
-$+>^Up::Send +{PgUp}
-$>^Down::Send {PgDn}
-$+>^Down::Send +{PgDn}
-
 ~*RControl::
 ~*RControl Up::
     rctrl_state := GetKeyState("RCtrl")
-    ToolTip, % "RControl " rctrl_state
+    ; ToolTip, % "RControl " rctrl_state
 return
 ~*LControl::
     MouseGetPos,,,guideUnderCursor
     WinActivate, ahk_id %guideUnderCursor% ; activate the window under the cursor
 ~*LControl Up::
     lctrl_state := GetKeyState("LCtrl")
-    ToolTip, % "LControl " lctrl_state
+    ; ToolTip, % "LControl " lctrl_state
 return
 ~*RShift::
 ~*LShift::
 ~*LShift Up::
 ~*RShift Up::
     shift_state := GetKeyState("LShift") + GetKeyState("RShift")
-    ToolTip, % "Shift " shift_state
+    ; ToolTip, % "Shift " shift_state
 return
 ~*LAlt::
 ~*LAlt Up::
     alt_state := GetKeyState("LAlt")
-    ToolTip, % "Alt " alt_state
+    ; ToolTip, % "Alt " alt_state
 return
 ~*LWin::
 ~*LWin Up::
     winkey_state := GetKeyState("LWin")
-    ToolTip, % "Win " winkey_state
+    ; ToolTip, % "Win " winkey_state
 return
 
-*Left::
+; Arrow keys
+*$Up::
+    if rctrl_state {
+        if shift_state {
+            Send +{PgUp}
+        }
+        else {
+            Send {PgUp}
+        }
+    }
+    else
+        Send {Blind}{Up}
+return
+
+*$Down::
+    if rctrl_state {
+        if shift_state {
+            Send +{PgDn}
+        }
+        else {
+            Send {PgDn}
+        }
+    }
+    else
+        Send {Blind}{Down}
+return
+
+*$Left::
     if rctrl_state {
         if shift_state {
             if isLeftToRight()
@@ -93,7 +115,7 @@ return
         Send {Blind}{Left}
 return
 
-*Right::
+*$Right::
     if rctrl_state {
         if shift_state {
             if isLeftToRight()

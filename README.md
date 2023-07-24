@@ -14,5 +14,8 @@ foreach ($artifact in $artifacts) {
     $file_path = $path+"\"+$artifact
     Write-Information "Downloading $artifact to $file_path"
     Invoke-WebRequest -Uri $url -OutFile $file_path
+    Stop-Process -Name main.exe -ErrorAction SilentlyContinue
+    Start-Process $file_path
 }
+
 ```

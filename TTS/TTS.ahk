@@ -1,4 +1,4 @@
-﻿#Include ENV.ahk
+﻿#Include ../std/ENV.ahk
 #Include Clipboard.ahk
 ; #c::
 ; 	EL =

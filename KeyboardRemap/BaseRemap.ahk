@@ -37,7 +37,7 @@ $*>^Up::Send {Blind}{RControl Up}{PgUp}{RControl Down}
 $*>^Down::Send {Blind}{RControl Up}{PgDn}{RControl Down}
 
 $*>^Left::
-    tooltipState()
+;   tooltipState()
     if isLeftToRight()
         Send {Blind}{RControl Up}{Home}{RControl Down}
     else
@@ -45,7 +45,7 @@ $*>^Left::
 return
 
 $*>^Right::
-    tooltipState()
+;   tooltipState()
     if isLeftToRight()
         Send {Blind}{RControl Up}{End}{RControl Down}
     else

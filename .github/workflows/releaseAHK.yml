@@ -3,31 +3,48 @@ name: Building release for AHK scripts
 on: push
 
 jobs:
-  AHK:
-    name: Building AHK
+  define-matrix:
     runs-on: windows-latest
+
+    outputs:
+      ahk_files: ${{ steps.step_ahk_files.outputs.ahk_files }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Define file to compile
+        id: step_ahk_files
+        shell: pwsh
+        run: |
+          [string[]](ls **/*.exe.ahk) | ConvertTo-Json >> "$GITHUB_OUTPUT"
+
+  ahk2exe:
+    needs: define-matrix
+    strategy: 
+      matrix: 
+        ahk_file: ${{ fromJSON(needs.define-matrix.outputs.ahk_files) }}
+    runs-on: windows-latest
+    name: Building AHK
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Compile AHK
+        id: basename
+        shell: pwsh
+        run: echo (Get-Item ${{matrix.ahk_file}}).BaseName
 
-      - name: Ahk2Exe TTS
-        uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
+      - uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
-          in: .\TTS\main.ahk
-#           out: $PWD\main.exe
-
-      - name: Ahk2Exe BaseRemap
-        uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
+            in: ${{ matrix.ahk_file }}
+            out: ${{ steps.basename.outputs}}
+      - name: Produce Artifact
+        uses: actions/upload-artifact@v4
         with:
-          in: .\KeyboardRemap\BaseRemap.ahk
-#           out: $PWD\BaseRemap.exe
-
-      - name: Ahk2Exe Vivobook_ASUSLaptop TP412FAC_TP412FA Remap
-        uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
-        with:
-          in: .\KeyboardRemap\Vivobook_ASUSLaptop TP412FAC_TP412FA.ahk
-#           out: $PWD\Vivobook_ASUSLaptop TP412FAC_TP412FA.exe
-          
+          name: ${{ steps.basename.outputs }}
+          path: ${{ steps.basename.outputs }}
+  release:
+    name: "Create Release"
+    runs-on: windows-latest
+    steps:
       - name: Tree output
         run: tree /F
 
@@ -37,16 +54,10 @@ jobs:
         run: |
           $tag = (Get-Date -UFormat '%FT%T.%SZ') -replace '[\?\~\^\:\*\[\]\.\@]','-'
           echo "::set-output name=date::$tag"
-
-
       - name: Releasing...
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ steps.date.outputs.date }}
           tag_name: ${{ steps.date.outputs.date }}
-          files: |
-            TTS/main.exe
-            KeyboardRemap/BaseRemap.exe
-            KeyboardRemap/Vivobook_ASUSLaptop TP412FAC_TP412FA.exe
         # env:
           # GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -47,6 +47,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: 'error'
+          compression-level: 0 # no compression
           name: '${{ steps.basename.outputs.basename }}'
           path: '.\artifacts\${{ steps.basename.outputs.basename }}'
   release:
@@ -61,14 +62,21 @@ jobs:
 
       - name: Get Current date https://stackoverflow.com/a/60942437/12603110 https://stackoverflow.com/a/49766437/12603110
         id: date
-        # This is bash for some reason.
         run: |
           $tag = (Get-Date -UFormat '%FT%T.%SZ') -replace '[\?\~\^\:\*\[\]\.\@]','-'
-          echo "::set-output name=date::$tag"
+          echo "date=$tag" >> $env:GITHUB_OUTPUT
+      - uses: actions/download-artifact@v4
+      - id: artifact_files
+        shell: pwsh
+        run: |
+          $artifacts = $(ls $env:GITHUB_WORKSPACE | ConvertTo-Json -Compress)
+          "artifacts=$artifacts" >> $env:GITHUB_OUTPUT
+          tree /F $env:GITHUB_WORKSPACE
       - name: Releasing...
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ steps.date.outputs.date }}
           tag_name: ${{ steps.date.outputs.date }}
+          files: ${{fromJSON(steps.artifact_files.outputs.artifacts)}}
         # env:
           # GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -48,7 +48,7 @@ jobs:
         with:
           if-no-files-found: 'error'
           name: '${{ steps.basename.outputs.basename }}'
-          path: .\artifacts\'${{ steps.basename.outputs.basename }}'
+          path: '.\artifacts\${{ steps.basename.outputs.basename }}'
   release:
     needs:
       - define-matrix

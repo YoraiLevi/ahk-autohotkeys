@@ -18,6 +18,13 @@ jobs:
           $files = $([string[]](ls **/*.exe.ahk) | ConvertTo-Json -Compress)
           echo $files
           echo "ahk_files=$files" >> "$GITHUB_OUTPUT"
+  print:
+    needs: define-matrix
+    runs-on: windows-latest
+    steps:
+      - shell: pwsh
+        run: |
+          echo ${{needs.define-matrix.outputs.ahk_files}}
 
   ahk2exe:
     needs: define-matrix

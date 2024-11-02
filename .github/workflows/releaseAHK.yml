@@ -69,14 +69,15 @@ jobs:
       - id: artifact_files
         shell: pwsh
         run: |
-          $artifacts = $(ls $env:GITHUB_WORKSPACE | ConvertTo-Json -Compress)
+          $artifacts = $([string[]](ls $env:GITHUB_WORKSPACE) | ConvertTo-Json -Compress)
           "artifacts=$artifacts" >> $env:GITHUB_OUTPUT
+          echo $artifacts
           tree /F $env:GITHUB_WORKSPACE
       - name: Releasing...
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ steps.date.outputs.date }}
           tag_name: ${{ steps.date.outputs.date }}
-          files: ${{fromJSON(steps.artifact_files.outputs.artifacts)}}
+          files: ${{ join(fromJSON(steps.artifact_files.outputs.artifacts),"\n") }}
         # env:
           # GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

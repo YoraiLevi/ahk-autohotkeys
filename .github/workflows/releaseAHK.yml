@@ -17,7 +17,7 @@ jobs:
         run: |
           $files = $([string[]](ls **/*.exe.ahk) | ConvertTo-Json -Compress)
           echo $files
-          echo "ahk_files=$files" >> "$GITHUB_OUTPUT"
+          echo "ahk_files=$files" >> $env:GITHUB_OUTPUT
   print:
     needs: define-matrix
     runs-on: windows-latest
@@ -40,7 +40,7 @@ jobs:
         id: basename
         shell: pwsh
         run: |
-          "basename=$(Get-Item ${{matrix.ahk_file}}).BaseName)" >> "$GITHUB_OUTPUT"
+          "basename=$(Get-Item ${{matrix.ahk_file}}).BaseName)" >> $env:GITHUB_OUTPUT
 
       - uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:

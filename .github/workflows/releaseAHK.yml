@@ -18,14 +18,6 @@ jobs:
           $files = $([string[]](ls **/*.exe.ahk) | ConvertTo-Json -Compress)
           echo $files
           echo "ahk_files=$files" >> $env:GITHUB_OUTPUT
-  print:
-    needs: define-matrix
-    runs-on: windows-latest
-    steps:
-      - shell: pwsh
-        run: |
-          echo ${{needs.define-matrix.outputs.ahk_files}}
-
   ahk2exe:
     needs: define-matrix
     strategy: 
@@ -46,9 +38,13 @@ jobs:
         with:
             in: '${{ matrix.ahk_file }}'
             out: '${{ steps.basename.outputs.basename}}'
+      - name: Tree output
+        shell: pwsh
+        run: tree /F
       - name: Produce Artifact
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: 'error'
           name: '${{ steps.basename.outputs.basename }}'
           path: '${{ steps.basename.outputs.basename }}'
   release:

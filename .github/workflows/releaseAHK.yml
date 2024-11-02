@@ -44,13 +44,13 @@ jobs:
 
       - uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
-            in: ${{ matrix.ahk_file }}
-            out: ${{ steps.basename.outputs.basename}}
+            in: '${{ matrix.ahk_file }}'
+            out: '${{ steps.basename.outputs.basename}}'
       - name: Produce Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.basename.outputs.basename }}
-          path: ${{ steps.basename.outputs.basename }}
+          name: '${{ steps.basename.outputs.basename }}'
+          path: '${{ steps.basename.outputs.basename }}'
   release:
     needs:
       - define-matrix

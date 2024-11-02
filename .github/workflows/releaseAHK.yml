@@ -69,7 +69,7 @@ jobs:
       - id: artifact_files
         shell: pwsh
         run: |
-          $artifacts = $([string[]](ls $env:GITHUB_WORKSPACE) | ConvertTo-Json -Compress)
+          $artifacts = $([string[]](ls $env:GITHUB_WORKSPACE) | Join-String -Separator "`n")
           "artifacts=$artifacts" >> $env:GITHUB_OUTPUT
           echo $artifacts
           tree /F $env:GITHUB_WORKSPACE
@@ -78,6 +78,4 @@ jobs:
         with:
           name: ${{ steps.date.outputs.date }}
           tag_name: ${{ steps.date.outputs.date }}
-          files: ${{ join(fromJSON(steps.artifact_files.outputs.artifacts),"\n") }}
-        # env:
-          # GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          files: ${{steps.artifact_files.outputs.artifacts}}

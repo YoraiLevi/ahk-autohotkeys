@@ -38,15 +38,17 @@ jobs:
         with:
             in: '${{ matrix.ahk_file }}'
             out: '${{ steps.basename.outputs.basename}}'
-      - name: Tree output
-        shell: pwsh
-        run: tree /F
+      - shell: pwsh
+        run: |
+          mkdir .\artifacts\
+          cp **/*.exe -Destination .\artifacts\
+          tree /F
       - name: Produce Artifact
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: 'error'
           name: '${{ steps.basename.outputs.basename }}'
-          path: '${{ steps.basename.outputs.basename }}'
+          path: .\artifacts\'${{ steps.basename.outputs.basename }}'
   release:
     needs:
       - define-matrix

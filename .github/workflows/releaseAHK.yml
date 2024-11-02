@@ -45,7 +45,7 @@ jobs:
       - uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
             in: ${{ matrix.ahk_file }}
-            out: ${{ steps.basename.outputs}}
+            out: ${{ steps.basename.outputs.basename}}
       - name: Produce Artifact
         uses: actions/upload-artifact@v4
         with:

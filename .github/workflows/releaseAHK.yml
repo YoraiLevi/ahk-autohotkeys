@@ -40,7 +40,7 @@ jobs:
         id: basename
         shell: pwsh
         run: |
-          "basename=$(Get-Item '${{matrix.ahk_file}}').BaseName)" >> $env:GITHUB_OUTPUT
+          "basename=$((Get-Item '${{matrix.ahk_file}}').BaseName)" >> $env:GITHUB_OUTPUT
 
       - uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:

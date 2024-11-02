@@ -1,21 +1,18 @@
 Install
 ```ps1
-$user = "YoraiLevi"
-$project = "autohotkeys"
-$artifacts = @("main.exe", 'BaseRemap.exe', 'Vivobook_ASUSLaptop TP412FAC_TP412FA.exe')
-$latestRelease = Invoke-WebRequest "https://github.com/$user/$project/releases/latest" -Headers @{"Accept"="application/json"}
-$json = $latestRelease.Content | ConvertFrom-Json
-$latestVersion = $json.tag_name
-foreach ($artifact in $artifacts) {
-    $artifact = $artifact -replace " ", "."
-    $url = "https://github.com/$user/$project/releases/download/$latestVersion/$artifact"
-    # $path = [Environment]::GetFolderPath(([Environment+SpecialFolder]::Startup))
-    $path = $ENV:UserProfile+"\"+"bin"; mkdir -p $path -ErrorAction SilentlyContinue
-    $file_path = $path+"\"+$artifact
-    Write-Information "Downloading $artifact to $file_path"
-    Invoke-WebRequest -Uri $url -OutFile $file_path
-    Stop-Process -Name main.exe -ErrorAction SilentlyContinue
-    Start-Process $file_path
-}
+$owner = "YoraiLevi"
+$repo = "ahk-autohotkeys"
+$baseboard_product = Get-CimInstance -Class Win32_BaseBoard | Select -ExpandProperty Product
 
+$releasesURL = "https://api.github.com/repos/$OWNER/$REPO/releases?per_page=1"
+$latestRelease = Invoke-WebRequest -Uri $releasesURL -Headers @{"Accept"="application/json"}
+$json = $latestRelease.Content | ConvertFrom-Json
+
+$path = $ENV:UserProfile+"\"+"bin"; mkdir -p $path -ErrorAction SilentlyContinue
+$artifacts = $json.assets | %{ @{Uri=$_.browser_download_url;Outfile=(Join-Path $path $_.Name)}} 
+
+# Download
+Stop-Process -Name "*_ahk"
+$artifacts | % { Write-Information "Downloading $($_.Name) to $($_.Outfile)"; Invoke-WebRequest @_ }
+$artifacts.OutFile | %{if (($baseboard_product -in $_) -or "_all_" -in $_) {Start-Process $_} }
 ```

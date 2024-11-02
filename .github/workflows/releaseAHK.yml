@@ -15,7 +15,7 @@ jobs:
         id: step_ahk_files
         shell: pwsh
         run: |
-          [string[]](ls **/*.exe.ahk) | ConvertTo-Json >> "$GITHUB_OUTPUT"
+          "ahk_files=$([string[]](ls **/*.exe.ahk) | ConvertTo-Json -Compress)" >> "$GITHUB_OUTPUT"
 
   ahk2exe:
     needs: define-matrix
@@ -30,7 +30,8 @@ jobs:
       - name: Compile AHK
         id: basename
         shell: pwsh
-        run: echo (Get-Item ${{matrix.ahk_file}}).BaseName
+        run: |
+          "basename=$(Get-Item ${{matrix.ahk_file}}).BaseName)" >> "$GITHUB_OUTPUT"
 
       - uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
@@ -39,8 +40,8 @@ jobs:
       - name: Produce Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.basename.outputs }}
-          path: ${{ steps.basename.outputs }}
+          name: ${{ steps.basename.outputs.basename }}
+          path: ${{ steps.basename.outputs.basename }}
   release:
     needs:
       - define-matrix

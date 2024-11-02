@@ -69,7 +69,7 @@ jobs:
       - id: artifact_files
         shell: pwsh
         run: |
-          $artifacts = $([string[]](ls $env:GITHUB_WORKSPACE -Recurse -File) | Join-String -Separator "`n")
+          $artifacts = $([string[]](ls $env:GITHUB_WORKSPACE -Recurse -File) | Join-String -Separator "`n") -replace '\\','/'
           echo "artifacts<<EOF" >> $env:GITHUB_OUTPUT
           echo $artifacts >> $env:GITHUB_OUTPUT
           echo "EOF" >> $env:GITHUB_OUTPUT

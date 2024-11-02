@@ -15,7 +15,9 @@ jobs:
         id: step_ahk_files
         shell: pwsh
         run: |
-          "ahk_files=$([string[]](ls **/*.exe.ahk) | ConvertTo-Json -Compress)" >> "$GITHUB_OUTPUT"
+          $files = $([string[]](ls **/*.exe.ahk) | ConvertTo-Json -Compress)
+          echo $files
+          echo "ahk_files=$files" >> "$GITHUB_OUTPUT"
 
   ahk2exe:
     needs: define-matrix

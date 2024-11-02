@@ -69,8 +69,10 @@ jobs:
       - id: artifact_files
         shell: pwsh
         run: |
-          $artifacts = $([string[]](ls $env:GITHUB_WORKSPACE) | Join-String -Separator "`n")
-          "artifacts=$artifacts" >> $env:GITHUB_OUTPUT
+          $artifacts = $([string[]](ls $env:GITHUB_WORKSPACE -Recurse -File) | Join-String -Separator "`n")
+          echo "artifacts<<EOF" >> $env:GITHUB_OUTPUT
+          echo $artifacts >> $env:GITHUB_OUTPUT
+          echo "EOF" >> $env:GITHUB_OUTPUT
           echo $artifacts
           tree /F $env:GITHUB_WORKSPACE
       - name: Releasing...

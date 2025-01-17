@@ -1,5 +1,6 @@
 #Include ../std/ENV.ahk
 #Include BaseRemap.ahk
+#Include ExplorerHotkeys.ahk
 
 ; Winkey instead of fn?
 $#Volume_Mute::Send {F1}

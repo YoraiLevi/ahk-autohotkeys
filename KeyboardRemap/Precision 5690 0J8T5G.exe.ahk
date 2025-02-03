@@ -16,14 +16,11 @@ $*^Volume_Mute::Send {Blind}{F1}
 $*^Volume_Down::Send {Blind}{F2}
 $*^Volume_Up::Send {Blind}{F3}
 
-$*Home::Send {Blind}{F9}
-$*F9::Send {Blind}{Home}
+$*PrintScreen::Send {Blind}{F10}
+$*F10::Send {Blind}{PrintScreen}
 
-$*End::Send {Blind}{F10}
-$*F10::Send {Blind}{End}
+$*Home::Send {Blind}{F11}
+$*F11::Send {Blind}{Home}
 
-$*PgUp::Send {Blind}{F11}
-$*F11::Send {Blind}{PgUp}
-
-$*PgDn::Send {Blind}{F12}
-$*F12::Send {Blind}{PgDn}
+$*End::Send {Blind}{F12}
+$*F12::Send {Blind}{End}

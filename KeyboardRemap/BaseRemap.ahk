@@ -1,4 +1,6 @@
 #Include ../std/ENV.ahk
+; Variables
+LShiftState := 0
 #Include KeyboardLayout.ahk
 #Persistent
 
@@ -25,13 +27,43 @@ tooltipState(){
     ToolTip, % "GetKeyState`nRControl " GetKeyState("RCtrl") "`nLControl " GetKeyState("LCtrl") "`nShift " GetKeyState("LShift") + GetKeyState("RShift") "`nAlt " GetKeyState("LAlt") "`nWin " GetKeyState("LWin")
 }
 
+*F23::
+if(!LShiftState){
+    Send, {Blind}{LWin Up}{LShift Up}
+}
+    Send, {Blind}{LWin Up}
+    Send, {Blind}{RControl Down}
+    Send, {Blind F23 Up}
+Return
+
+*F23 Up::
+Send, {Blind}{RControl Up}
+return 
+
+~*LShift::
+    LWinState := GetKeyState("LWin")
+    if(!GetKeyState("LWin")){
+        LShiftState := GetKeyState("LShift")
+    }
+return
+
+~*LShift Up::
+    LWinState := GetKeyState("LWin")
+    if(!GetKeyState("LWin")){
+        LShiftState := GetKeyState("LShift")
+    }
+Return
 
 ; Arrow keys
-$*>^Up::Send {Blind}{RControl Up}{PgUp}{RControl Down}
-$*>^Down::Send {Blind}{RControl Up}{PgDn}{RControl Down}
+$*>^Up::
+    Send {Blind}{RControl Up}{PgUp}{RControl Down}
+return
+
+$*>^Down::
+    Send {Blind}{RControl Up}{PgDn}{RControl Down}
+return
 
 $*>^Left::
-;   tooltipState()
     if isLeftToRight()
         Send {Blind}{RControl Up}{Home}{RControl Down}
     else
@@ -39,9 +71,37 @@ $*>^Left::
 return
 
 $*>^Right::
-;   tooltipState()
     if isLeftToRight()
         Send {Blind}{RControl Up}{End}{RControl Down}
     else
         Send {Blind}{RControl Up}{Home}{RControl Down}
 return
+; Now with copilot!
+F23 & Up::
+    Send {Blind}{RControl Up}{PgUp}{RControl Down}
+return
+
+F23 & Down::
+    Send {Blind}{RControl Up}{PgDn}{RControl Down}
+return
+
+F23 & Left::
+    if isLeftToRight(){
+            Send {Blind}{RControl Up}{Home}{RControl Down}
+        }
+    else{
+            Send {Blind}{RControl Up}{End}{RControl Down}
+        }
+return
+
+F23 & Right::
+    if isLeftToRight(){
+            Send {Blind}{RControl Up}{End}{RControl Down}
+    }
+    else{
+            Send {Blind}{RControl Up}{Home}{RControl Down}
+    }
+
+return
+; More Hotkeys
+#Include ExplorerHotkeys.ahk

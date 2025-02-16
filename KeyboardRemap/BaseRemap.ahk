@@ -87,19 +87,19 @@ return
 
 F23 & Left::
     if isLeftToRight(){
-            Send {Blind}{RControl Up}{Home}{RControl Down}
+            Send {Blind}{Home}
         }
     else{
-            Send {Blind}{RControl Up}{End}{RControl Down}
+            Send {Blind}{End}
         }
 return
 
 F23 & Right::
     if isLeftToRight(){
-            Send {Blind}{RControl Up}{End}{RControl Down}
+            Send {Blind}{End}
     }
     else{
-            Send {Blind}{RControl Up}{Home}{RControl Down}
+            Send {Blind}{Home}
     }
 
 return

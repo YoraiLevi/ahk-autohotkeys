@@ -13,3 +13,6 @@ Stop-Process -Name "*_ahk"
 $assets | % { Write-Information "Downloading $($_.Name) to $($_.Outfile)"; Invoke-WebRequest @_ }
 $assets.OutFile | % { if( ($_ -match $baseboard_product) -or ($_ -match "_all_") ) {Start-Process $_} }
 ```
+
+AHKHID https://www.autohotkey.com/board/topic/38015-ahkhid-an-ahk-implementation-of-the-hid-functions/page-29#entry631055
+Using Raw Input from C# to handle multiple keyboards https://www.codeproject.com/Articles/17123/Using-Raw-Input-from-C-to-handle-multiple-keyboard

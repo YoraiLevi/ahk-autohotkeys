@@ -1,8 +1,21 @@
 #Include ../std/ENV.ahk
 ; Variables
-LShiftState := 0
+global tooltipActive := false  ; Start with tooltip active
+global LShiftState := 0
+global RShiftState := 0
+global LCtrlState := 0
+global RCtrlState := 0
+global LAltState := 0
+global RAltState := 0
+global LWinState := 0
+global RWinState := 0
 #Include KeyboardLayout.ahk
 #Persistent
+
+; Start the tooltip timer
+if(tooltipActive){
+    SetTimer, tooltipState, 50
+}
 
 ; https://www.autohotkey.com/board/topic/55921-multiple-keyboards-workaround/
 ; Laptop top row, passthrough for modifiers
@@ -23,36 +36,42 @@ isLeftToRight(){
         ; msgbox, Language is HE
     }
 }
+
 tooltipState(){
-    ToolTip, % "GetKeyState`nRControl " GetKeyState("RCtrl") "`nLControl " GetKeyState("LCtrl") "`nShift " GetKeyState("LShift") + GetKeyState("RShift") "`nAlt " GetKeyState("LAlt") "`nWin " GetKeyState("LWin")
+    ToolTip, % "Logical State (GetKeyState)`n"
+        . "RControl: " GetKeyState("RCtrl") " (StateCounter: " RCtrlState ")`n"
+        . "LControl: " GetKeyState("LCtrl") " (StateCounter: " LCtrlState ")`n"
+        . "LShift: " GetKeyState("LShift") " (StateCounter: " LShiftState ")`n"
+        . "RShift: " GetKeyState("RShift") " (StateCounter: " RShiftState ")`n"
+        . "LAlt: " GetKeyState("LAlt") " (StateCounter: " LAltState ")`n"
+        . "RAlt: " GetKeyState("RAlt") " (StateCounter: " RAltState ")`n"
+        . "LWin: " GetKeyState("LWin") " (StateCounter: " LWinState ")`n"
+        . "RWin: " GetKeyState("RWin") " (StateCounter: " RWinState ")`n`n"
+        . "Physical State (GetKeyState with 'P')`n"
+        . "RControl: " GetKeyState("RCtrl", "P") "`n"
+        . "LControl: " GetKeyState("LCtrl", "P") "`n"
+        . "LShift: " GetKeyState("LShift", "P") "`n"
+        . "RShift: " GetKeyState("RShift", "P") "`n"
+        . "LAlt: " GetKeyState("LAlt", "P") "`n"
+        . "RAlt: " GetKeyState("RAlt", "P") "`n"
+        . "LWin: " GetKeyState("LWin", "P") "`n"
+        . "RWin: " GetKeyState("RWin", "P") "`n`n"
+        . "Press Ctrl+Alt+T to hide/show this tooltip"
 }
 
-*F23::
-    if(!LShiftState){
-        Send, {Blind}{LWin Up}{LShift Up}
-    }
-    Send, {Blind}{LWin Up}
-    Send, {Blind}{RControl Down}
-    Send, {Blind F23 Up}
-Return
-
-*F23 Up::
-    Send, {Blind}{RControl Up}
-return
-
-~*LShift::
-    LWinState := GetKeyState("LWin")
-    if(!GetKeyState("LWin")){
-        LShiftState := GetKeyState("LShift")
+^!t::  ; Ctrl+Alt+T to toggle the auto-refreshing tooltip
+    global tooltipActive
+    tooltipActive := !tooltipActive
+    if (tooltipActive) {
+        SetTimer, tooltipState, 50  ; Update every 50ms
+        tooltipState()  ; Show initial state
+    } else {
+        SetTimer, tooltipState, Off
+        ToolTip  ; Clear the tooltip
     }
 return
 
-~*LShift Up::
-    LWinState := GetKeyState("LWin")
-    if(!GetKeyState("LWin")){
-        LShiftState := GetKeyState("LShift")
-    }
-Return
+#Include CopilotRemap.ahk
 
 ; Arrow keys
 $*>^Up::
@@ -75,36 +94,6 @@ $*>^Right::
         Send {Blind}{RControl Up}{End}{RControl Down}
     else
         Send {Blind}{RControl Up}{Home}{RControl Down}
-return
-; Now with copilot!
-F23 & Up::
-    Send, {Blind}{RControl Up}
-    Send {Blind}{PgUp}
-return
-
-F23 & Down::
-    Send, {Blind}{RControl Up}
-    Send {Blind}{PgDn}
-return
-
-F23 & Left::
-    Send, {Blind}{RControl Up}
-    if isLeftToRight(){
-        Send {Blind}{Home}
-    }
-    else{
-        Send {Blind}{End}
-    }
-return
-
-F23 & Right::
-    Send, {Blind}{RControl Up}
-    if isLeftToRight(){
-        Send {Blind}{End}
-    }
-    else{
-        Send {Blind}{Home}
-    }
 return
 
 ; More Hotkeys

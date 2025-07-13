@@ -11,7 +11,7 @@ $assets = $json.assets | %{ @{Uri=$_.browser_download_url; Outfile=(Join-Path $p
 # Download
 Stop-Process -Name "ahk_*"
 $assets | % { Write-Information "Downloading $($_.Name) to $($_.Outfile)"; Invoke-WebRequest @_ }
-$assets.OutFile | % { if( ($_ -match $baseboard_product) -or ($_ -match "_all_") ) {Start-Process $_} }
+$assets.OutFile | where-object {($_ -match $baseboard_product) -or ($_ -match "_all.exe")} | foreach { Start-Process $_ }
 ```
 
 AHKHID https://www.autohotkey.com/board/topic/38015-ahkhid-an-ahk-implementation-of-the-hid-functions/page-29#entry631055

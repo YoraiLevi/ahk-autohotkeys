@@ -1,6 +1,9 @@
 name: Building release for AHK scripts
 
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   define-matrix:
@@ -18,6 +21,7 @@ jobs:
           $files = $([string[]](ls **/*.exe.ahk) | ConvertTo-Json -Compress)
           echo $files
           echo "ahk_files=$files" >> $env:GITHUB_OUTPUT
+
   ahk2exe:
     needs: define-matrix
     strategy: 
@@ -25,9 +29,11 @@ jobs:
         ahk_file: ${{ fromJSON(needs.define-matrix.outputs.ahk_files) }}
     runs-on: windows-latest
     name: Building AHK
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Compile AHK
         id: basename
         shell: pwsh
@@ -36,13 +42,15 @@ jobs:
 
       - uses: YoraiLevi/GitHub-Action-Ahk2Exe@main
         with:
-            in: '${{ matrix.ahk_file }}'
-            out: '${{ steps.basename.outputs.basename}}'
+          in: '${{ matrix.ahk_file }}'
+          out: '${{ steps.basename.outputs.basename }}'
+
       - shell: pwsh
         run: |
           mkdir .\artifacts\
           cp **/*.exe -Destination .\artifacts\
           tree /F
+
       - name: Produce Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -50,12 +58,14 @@ jobs:
           compression-level: 0 # no compression
           name: '${{ steps.basename.outputs.basename }}'
           path: '.\artifacts\${{ steps.basename.outputs.basename }}'
+
   release:
     needs:
       - define-matrix
       - ahk2exe
     name: "Create Release"
     runs-on: windows-latest
+
     steps:
       - name: Tree output
         run: tree /F
@@ -65,7 +75,9 @@ jobs:
         run: |
           $tag = (Get-Date -UFormat '%FT%T.%SZ') -replace '[\?\~\^\:\*\[\]\.\@]','-'
           echo "date=$tag" >> $env:GITHUB_OUTPUT
+
       - uses: actions/download-artifact@v4
+
       - id: artifact_files
         shell: pwsh
         run: |
@@ -75,9 +87,10 @@ jobs:
           echo "EOF" >> $env:GITHUB_OUTPUT
           echo $artifacts
           tree /F $env:GITHUB_WORKSPACE
+
       - name: Releasing...
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ steps.date.outputs.date }}
           tag_name: ${{ steps.date.outputs.date }}
-          files: ${{steps.artifact_files.outputs.artifacts}}
+          files: ${{ steps.artifact_files.outputs.artifacts }}

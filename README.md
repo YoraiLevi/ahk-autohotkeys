@@ -9,7 +9,7 @@ $request = @{Headers = @{"Accept"="application/json"}; Uri = "https://api.github
 $json = Invoke-WebRequest @request | Select -ExpandProperty Content | ConvertFrom-Json
 $assets = $json.assets | %{ @{Uri=$_.browser_download_url; Outfile=(Join-Path $path $_.Name)}} 
 # Download
-Stop-Process -Name "*_ahk"
+Stop-Process -Name "ahk_*"
 $assets | % { Write-Information "Downloading $($_.Name) to $($_.Outfile)"; Invoke-WebRequest @_ }
 $assets.OutFile | % { if( ($_ -match $baseboard_product) -or ($_ -match "_all_") ) {Start-Process $_} }
 ```

@@ -9,10 +9,10 @@ $#F2:: Send { F2 } ; Required for vscode
 $#F3:: Send { F3 } ; Required for vscode
 
 $ScrollLock:: Send { Media_Next }
-$Pause:: Send { Media_Play_Pause }
+$#Pause:: Send { Media_Play_Pause }
 $#ScrollLock:: Send { ScrollLock }
 
-#Pause::
+Pause::
 WinGet, windowState, MinMax, A
 if (windowState = 1) { ; Window is maximized
     WinRestore, A

@@ -20,3 +20,5 @@ if (windowState = 1) { ; Window is maximized
     WinMaximize, A
 }
 return
+
+$#F11:: Send { F11 }

@@ -30,7 +30,7 @@ return
 TextCleanup(string){
 	quote = "
 	; Use a single regex to remove unwanted characters and URL patterns
-	string := RegExReplace(string, "i)(https?://|www\.|[""'`,!@#$%^&*_?/\\])", "")
+	string := RegExReplace(string, "i)(https?://|www\.|[""'`,!@#$%^&*_?/\\])", " ")
 	return string
 }
 Read(transcript,voice,speed=0,pitch=0,volume=100,pause_sentence=0,pause_paragraphs=0){

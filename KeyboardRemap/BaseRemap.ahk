@@ -9,8 +9,21 @@ global LAltState := 0
 global RAltState := 0
 global LWinState := 0
 global RWinState := 0
+global laptopKeyboard := false
+
 #Include KeyboardLayout.ahk
 #Persistent
+
+
+toggleLaptopKeyboard(){
+    laptopKeyboard := !laptopKeyboard
+    if(laptopKeyboard){
+        ; ToolTip, Laptop hotkeys are now active
+    }
+    else{
+        ; ToolTip, Laptop hotkeys are now inactive
+    }
+}
 
 ; Start the tooltip timer
 if(tooltipActive){
@@ -98,3 +111,4 @@ return
 
 ; More Hotkeys
 #Include ExplorerHotkeys.ahk
+#Include MoveWindowHotkeys.ahk

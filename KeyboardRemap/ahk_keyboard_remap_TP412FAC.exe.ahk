@@ -16,14 +16,69 @@ $*^Volume_Mute::Send {Blind}{F1}
 $*^Volume_Down::Send {Blind}{F2}
 $*^Volume_Up::Send {Blind}{F3}
 
-$*Home::Send {Blind}{F9}
-$*F9::Send {Blind}{Home}
+$*Home::
+    if(laptopKeyboard){
+        Send {Blind}{F9}
+    }
+    else{
+        Send {Blind}{Home}
+    }
+Return
+$*F9::
+    if(laptopKeyboard){
+        Send {Blind}{Home}
+    }
+    else {
+        Send {Blind}{F9}
+    }
+Return
 
-$*End::Send {Blind}{F10}
-$*F10::Send {Blind}{End}
+$*End::
+    if (laptopKeyboard){
+        Send {Blind}{F10}
+    }
+    else{
+        Send {Blind}{End}
+    }
+Return
+$*F10::
+    if (laptopKeyboard){
+        Send {Blind}{End}
+    }
+    else{
+    }
 
-$*PgUp::Send {Blind}{F11}
-$*F11::Send {Blind}{PgUp}
+Return
+$*PgUp::
+    if (laptopKeyboard){
+        Send {Blind}{F11}
+    }
+    else{
+        Send {Blind}{PgUp}
+    }
 
-$*PgDn::Send {Blind}{F12}
-$*F12::Send {Blind}{PgDn}
+Return
+$*F11::
+    if (laptopKeyboard){
+        Send {Blind}{PgUp}
+    }
+    else{
+        Send {Blind}{F11}
+    }
+
+Return
+$*PgDn::
+    if (laptopKeyboard){
+        Send {Blind}{F12}
+    }
+    else{
+        Send {Blind}{PgDn}
+    }
+Return
+$*F12::
+    if (laptopKeyboard){
+        Send {Blind}{PgDn}
+    }
+    else{
+        Send {Blind}{F12}
+    }

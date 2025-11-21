@@ -14,7 +14,6 @@ global laptopKeyboard := false
 #Include KeyboardLayout.ahk
 #Persistent
 
-
 toggleLaptopKeyboard(){
     laptopKeyboard := !laptopKeyboard
     if(laptopKeyboard){
@@ -108,6 +107,10 @@ $*>^Right::
     else
         Send {Blind}{RControl Up}{Home}{RControl Down}
 return
+
+$+Pause::
+    toggleLaptopKeyboard()
+Return
 
 ; More Hotkeys
 #Include ExplorerHotkeys.ahk

@@ -1,227 +1,65 @@
 #Include ../std/ENV.ahk
 #Include BaseRemap.ahk
 
-; Winkey instead of fn?
-$#Volume_Mute::
-    if (laptopKeyboard) {
-        Send {F1}
-    }
-Return
+; Laptop keyboard behavior
+#If (laptopKeyboard)
+    $#Volume_Mute::       Send {F1}
+    $#Volume_Down::       Send {F2}
+    $#Volume_Up::         Send {F3}
 
-$#Volume_Down::
-    if (laptopKeyboard) {
-        Send {F2}
-    }
-Return
+    $*+Volume_Mute::      Send {Blind}{F1}
+    $*+Volume_Down::      Send {Blind}{F2}
+    $*+Volume_Up::        Send {Blind}{F3}
 
-$#Volume_Up::
-    if (laptopKeyboard) {
-        Send {F3}
-    }
-Return
-; Modifier + Volume = Fkey
-$*+Volume_Mute::
-    if (laptopKeyboard) {
-        Send {Blind}{F1}
-    }
-Return
-$*+Volume_Down::
-    if (laptopKeyboard) {
-        Send {Blind}{F2}
-    }
-Return
-$*+Volume_Up::
-    if (laptopKeyboard) {
-        Send {Blind}{F3}
-    }
-Return
+    $*!Volume_Mute::      Send {Blind}{F1}
+    $*!Volume_Down::      Send {Blind}{F2}
+    $*!Volume_Up::        Send {Blind}{F3}
 
-$*!Volume_Mute::
-    if (laptopKeyboard) {
-        Send {Blind}{F1}
-    }
-Return
-$*!Volume_Down::
-    if (laptopKeyboard) {
-        Send {Blind}{F2}
-    }
-Return
-$*!Volume_Up::
-    if (laptopKeyboard) {
-        Send {Blind}{F3}
-    }
-Return
+    $*^Volume_Mute::      Send {Blind}{F1}
+    $*^Volume_Down::      Send {Blind}{F2}
+    $*^Volume_Up::        Send {Blind}{F3}
 
-$*^Volume_Mute::
-    if (laptopKeyboard) {
-        Send {Blind}{F1}
-    }
-Return
-$*^Volume_Down::
-    if (laptopKeyboard) {
-        Send {Blind}{F2}
-    }
-Return
-$*^Volume_Up::
-    if (laptopKeyboard) {
-        Send {Blind}{F3}
-    }
-Return
+    $F1::                 Send {Blind}{F1}
+    $F2::                 Send {Blind}{F2}
+    $F3::                 Send {Blind}{F3}
 
-$F1::
-    if (laptopKeyboard) {
-        Send {Blind}{F1}
-    }
-    else{
-        Send {Volume_Mute}
-    }
-Return
+    $#F1::                Send {F1} ; Required for vscode
+    $#F2::                Send {F2} ; Required for vscode
+    $#F3::                Send {F3} ; Required for vscode
 
-$F2::
-    if (laptopKeyboard) {
-        Send {Blind}{F2}
-    }
-    else{
-        Send {Volume_Down}
-    }
-Return
+    $Insert::             Send {Media_Next}
+    $+Insert::            Send {Media_Prev}
+    Pause::               Send {Media_Play_Pause}
+    $#Insert::            Send {Insert}
 
-$F3::
-    if (laptopKeyboard) {
-        Send {Blind}{F3}
-    }
-    else{
-        Send {Volume_Up}
-    }
-Return
+    ; Swap top row fn functionality
+    $*Home::              Send {Blind}{F9}
+    $*F9::                Send {Blind}{Home}
 
-$#F1::
-    if (laptopKeyboard) {
-        Send {F1} ; Required for vscode
-    }
-    else{
-        Send {F1} ; Required for vscode
-    }
-Return
+    $*End::               Send {Blind}{F10}
+    $*F10::               Send {Blind}{End}
 
-$#F2::
-    if (laptopKeyboard) {
-        Send {F2} ; Required for vscode
-    }
-    else{
-        Send {F2} ; Required for vscode
-    }
-Return
+    $*PgUp::              Send {Blind}{F11}
+    $*F11::               Send {Blind}{PgUp}
 
-$#F3::
-    if (laptopKeyboard) {
-        Send {F3} ; Required for vscode
-    }
-    else{
-        Send {F3} ; Required for vscode
-    }
-Return
+    $*PgDn::              Send {Blind}{F12}
+    $*F12::               Send {Blind}{PgDn}
 
-$ScrollLock::
-    if (laptopKeyboard) {
-        Send {Media_Next}
-    }
-    else{
-        Send {Media_Next}
-    }
-Return
+#If  ; end if directive
 
-$+ScrollLock::
-    if (laptopKeyboard) {
-        Send {Media_Prev}
-    }
-    else{
-        Send {Media_Prev}
-    }
-Return
+; External keyboard behavior
+#If !(laptopKeyboard)
+    $F1::                 Send {Volume_Mute}
+    $F2::                 Send {Volume_Down}
+    $F3::                 Send {Volume_Up}
 
-Pause::
-if (laptopKeyboard) {
-    Send {Media_Play_Pause}
-}
-else{
-    Send {Media_Play_Pause}
-}
-Return
+    $#F1::                Send {F1}
+    $#F2::                Send {F2}
+    $#F3::                Send {F3}
 
-$#ScrollLock::
-    if (laptopKeyboard) {
-        Send {ScrollLock}
-    }
-    else{
-        Send {ScrollLock}
-    }
-Return
+    $ScrollLock::         Send {Media_Next}
+    $+ScrollLock::        Send {Media_Prev}
+    Pause::               Send {Media_Play_Pause}
+    $#ScrollLock::        Send {ScrollLock}
 
-$*Home::
-    if(laptopKeyboard){
-        Send {Blind}{F9}
-    }
-    else{
-        Send {Blind}{Home}
-    }
-Return
-$*F9::
-    if(laptopKeyboard){
-        Send {Blind}{Home}
-    }
-    else {
-        Send {Blind}{F9}
-    }
-Return
-
-$*End::
-    if (laptopKeyboard){
-        Send {Blind}{F10}
-    }
-    else{
-        Send {Blind}{End}
-    }
-Return
-$*F10::
-    if (laptopKeyboard){
-        Send {Blind}{End}
-    }
-    else{
-    }
-
-Return
-$*PgUp::
-    if (laptopKeyboard){
-        Send {Blind}{F11}
-    }
-    else{
-        Send {Blind}{PgUp}
-    }
-
-Return
-$*F11::
-    if (laptopKeyboard){
-        Send {Blind}{PgUp}
-    }
-    else{
-        Send {Blind}{F11}
-    }
-
-Return
-$*PgDn::
-    if (laptopKeyboard){
-        Send {Blind}{F12}
-    }
-    else{
-        Send {Blind}{PgDn}
-    }
-Return
-$*F12::
-    if (laptopKeyboard){
-        Send {Blind}{PgDn}
-    }
-    else{
-        Send {Blind}{F12}
-    }
-
+#If  ; end if directive

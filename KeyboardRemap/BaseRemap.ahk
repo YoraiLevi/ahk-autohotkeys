@@ -17,10 +17,10 @@ global laptopKeyboard := false
 toggleLaptopKeyboard(){
     laptopKeyboard := !laptopKeyboard
     if(laptopKeyboard){
-        ; ToolTip, Laptop hotkeys are now active
+        MsgBox, Laptop hotkeys are now active
     }
     else{
-        ; ToolTip, Laptop hotkeys are now inactive
+        MsgBox, Non-Laptop hotkeys are now active
     }
 }
 

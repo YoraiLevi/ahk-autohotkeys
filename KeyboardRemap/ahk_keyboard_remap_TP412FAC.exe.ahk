@@ -70,6 +70,7 @@ Return
 
 $F1::
     if (laptopKeyboard) {
+        Send {Blind}{F1}
     }
     else{
         Send {Volume_Mute}
@@ -78,7 +79,7 @@ Return
 
 $F2::
     if (laptopKeyboard) {
-        Send {Volume_Down}
+        Send {Blind}{F2}
     }
     else{
         Send {Volume_Down}
@@ -87,7 +88,7 @@ Return
 
 $F3::
     if (laptopKeyboard) {
-        Send {Volume_Up}
+        Send {Blind}{F3}
     }
     else{
         Send {Volume_Up}
@@ -223,3 +224,4 @@ $*F12::
     else{
         Send {Blind}{F12}
     }
+

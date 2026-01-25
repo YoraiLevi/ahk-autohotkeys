@@ -2,19 +2,160 @@
 #Include BaseRemap.ahk
 
 ; Winkey instead of fn?
-$#Volume_Mute::Send {F1}
-$#Volume_Down::Send {F2}
-$#Volume_Up::Send {F3}
+$#Volume_Mute::
+    if (laptopKeyboard) {
+        Send {F1}
+    }
+Return
+
+$#Volume_Down::
+    if (laptopKeyboard) {
+        Send {F2}
+    }
+Return
+
+$#Volume_Up::
+    if (laptopKeyboard) {
+        Send {F3}
+    }
+Return
 ; Modifier + Volume = Fkey
-$*+Volume_Mute::Send {Blind}{F1}
-$*+Volume_Down::Send {Blind}{F2}
-$*+Volume_Up::Send {Blind}{F3}
-$*!Volume_Mute::Send {Blind}{F1}
-$*!Volume_Down::Send {Blind}{F2}
-$*!Volume_Up::Send {Blind}{F3}
-$*^Volume_Mute::Send {Blind}{F1}
-$*^Volume_Down::Send {Blind}{F2}
-$*^Volume_Up::Send {Blind}{F3}
+$*+Volume_Mute::
+    if (laptopKeyboard) {
+        Send {Blind}{F1}
+    }
+Return
+$*+Volume_Down::
+    if (laptopKeyboard) {
+        Send {Blind}{F2}
+    }
+Return
+$*+Volume_Up::
+    if (laptopKeyboard) {
+        Send {Blind}{F3}
+    }
+Return
+
+$*!Volume_Mute::
+    if (laptopKeyboard) {
+        Send {Blind}{F1}
+    }
+Return
+$*!Volume_Down::
+    if (laptopKeyboard) {
+        Send {Blind}{F2}
+    }
+Return
+$*!Volume_Up::
+    if (laptopKeyboard) {
+        Send {Blind}{F3}
+    }
+Return
+
+$*^Volume_Mute::
+    if (laptopKeyboard) {
+        Send {Blind}{F1}
+    }
+Return
+$*^Volume_Down::
+    if (laptopKeyboard) {
+        Send {Blind}{F2}
+    }
+Return
+$*^Volume_Up::
+    if (laptopKeyboard) {
+        Send {Blind}{F3}
+    }
+Return
+
+$F1::
+    if (laptopKeyboard) {
+    }
+    else{
+        Send {Volume_Mute}
+    }
+Return
+
+$F2::
+    if (laptopKeyboard) {
+        Send {Volume_Down}
+    }
+    else{
+        Send {Volume_Down}
+    }
+Return
+
+$F3::
+    if (laptopKeyboard) {
+        Send {Volume_Up}
+    }
+    else{
+        Send {Volume_Up}
+    }
+Return
+
+$#F1::
+    if (laptopKeyboard) {
+        Send {F1} ; Required for vscode
+    }
+    else{
+        Send {F1} ; Required for vscode
+    }
+Return
+
+$#F2::
+    if (laptopKeyboard) {
+        Send {F2} ; Required for vscode
+    }
+    else{
+        Send {F2} ; Required for vscode
+    }
+Return
+
+$#F3::
+    if (laptopKeyboard) {
+        Send {F3} ; Required for vscode
+    }
+    else{
+        Send {F3} ; Required for vscode
+    }
+Return
+
+$ScrollLock::
+    if (laptopKeyboard) {
+        Send {Media_Next}
+    }
+    else{
+        Send {Media_Next}
+    }
+Return
+
+$+ScrollLock::
+    if (laptopKeyboard) {
+        Send {Media_Prev}
+    }
+    else{
+        Send {Media_Prev}
+    }
+Return
+
+Pause::
+if (laptopKeyboard) {
+    Send {Media_Play_Pause}
+}
+else{
+    Send {Media_Play_Pause}
+}
+Return
+
+$#ScrollLock::
+    if (laptopKeyboard) {
+        Send {ScrollLock}
+    }
+    else{
+        Send {ScrollLock}
+    }
+Return
 
 $*Home::
     if(laptopKeyboard){

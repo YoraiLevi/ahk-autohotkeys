@@ -41,12 +41,13 @@ return
 
 ; Default - Win+Alt+Left/Right moves windows in thirds
 ; Win+Left/Right => Win+Alt+Left/Right, move in thirds instead of in halfs/quarters
-#Left:: Send, #!{Left}
-#Right:: Send, #!{Right}
+$#Left:: Send, {Blind}!{Left}
+$#Right:: Send, {Blind}!{Right}
 ; Default - Win+Arrows moves windows in halfs/quarters
 ; Win+Alt+Left/Right => Win+Left/Right, move in halfs/quarters instead of in thirds
-#!Left:: Send, #{Left}
-#!Right:: Send, #{Right}
+; Very slow?
+; $#!Left:: Send, #{Left}
+; $#!Right:: Send, #{Right}
 
 ; Default - Win+Shift+Left/Right Moves the window across monitors
 ; Ctrl+Win+Left/Right => Shift+Win+Left/Right

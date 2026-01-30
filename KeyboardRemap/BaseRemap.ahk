@@ -9,13 +9,31 @@ global LAltState := 0
 global RAltState := 0
 global LWinState := 0
 global RWinState := 0
-global laptopKeyboard := false
+global laptopKeyboardStateFile := A_ScriptDir . "\laptopKeyboard.state"
+global laptopKeyboard := loadLaptopKeyboardState()
 
 #Include KeyboardLayout.ahk
 #Persistent
 
+loadLaptopKeyboardState() {
+    global laptopKeyboardStateFile
+    if (FileExist(laptopKeyboardStateFile)) {
+        FileRead, savedState, %laptopKeyboardStateFile%
+        return (savedState = "1")
+    }
+    return false
+}
+
+saveLaptopKeyboardState(state) {
+    global laptopKeyboardStateFile
+    FileDelete, %laptopKeyboardStateFile%
+    FileAppend, %state%, %laptopKeyboardStateFile%
+}
+
 toggleLaptopKeyboard(){
+    global laptopKeyboard
     laptopKeyboard := !laptopKeyboard
+    saveLaptopKeyboardState(laptopKeyboard ? "1" : "0")
     if(laptopKeyboard){
         MsgBox, Laptop hotkeys are now active
     }

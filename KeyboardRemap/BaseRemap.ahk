@@ -12,6 +12,10 @@ global RWinState := 0
 global laptopKeyboardStateFile := A_ScriptDir . "\laptopKeyboard.state"
 global laptopKeyboard := loadLaptopKeyboardState()
 
+; --- "Cooldown" tracking for Alt+Tab switching ---
+global altTabLastTime := 0
+altTabCooldownMs := 500  ; Cooldown in ms before Ctrl window focus will work again
+
 #Include KeyboardLayout.ahk
 #Persistent
 
@@ -98,6 +102,56 @@ tooltipState(){
     } else {
         SetTimer, tooltipState, Off
         ToolTip  ; Clear the tooltip
+    }
+return
+
+MoveMouseToSelectedWindow(){
+    WinGetPos, winX, winY, winWidth, winHeight, A
+    if (winX != "" && winY != "") {
+        ; Move mouse to center of the active window
+        centerX := winX + (winWidth // 2)
+        centerY := winY + (winHeight // 2)
+        DllCall("SetCursorPos", int, centerX, int, centerY) ; https://www.autohotkey.com/boards/viewtopic.php?t=60433 ;MouseMove, X, Y, 0 ; does not work with multi-monitor
+    }
+}
+
+$~*#Left Up::
+    MoveMouseToSelectedWindow()
+return
+$~*#Right Up::
+    MoveMouseToSelectedWindow()
+return
+
+; Move mouse to selected window when Alt is released after Alt+Tab
+$~*Alt Up::
+    global altTabLastTime, altTabCooldownMs
+    ; Only execute if the active window is XamlExplorerHostlslandWindow (Task Switching)
+    WinGetClass, activeClass, A
+    condition := (activeClass && activeClass != "" && activeClass != "XamlExplorerHostIslandWindow")
+    if (!activeClass && activeClass != "" && activeClass != "XamlExplorerHostIslandWindow") {
+        return
+    }
+    altTabLastTime := A_TickCount
+    WinWaitNotActive ,ahk_class XamlExplorerHostIslandWindow,, 0.5 ; Not sure if this is the correct syntax but it seem to work
+    MoveMouseToSelectedWindow()
+return
+
+; --- Hotkey: Focus Window Under Mouse When Ctrl Pressed, but NOT after recent AltTab ---
+$~LCtrl::
+    global altTabLastTime, altTabCooldownMs
+    ; Don't switch focus if Ctrl is being held down (key repeat)
+    if (A_PriorKey = "LControl") {
+        altTabLastTime := A_TickCount
+        return
+    }
+    if (altTabLastTime && (A_TickCount - altTabLastTime < altTabCooldownMs)) {
+        return
+    }
+    MouseGetPos, , , winId
+    if winId
+    {
+        WinActivate, ahk_id %winId%
+        altTabLastTime := A_TickCount
     }
 return
 

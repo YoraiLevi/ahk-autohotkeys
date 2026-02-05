@@ -15,6 +15,7 @@ global laptopKeyboard := loadLaptopKeyboardState()
 ; --- "Cooldown" tracking for Alt+Tab switching ---
 global altTabLastTime := 0
 altTabCooldownMs := 500  ; Cooldown in ms before Ctrl window focus will work again
+global tabPressed := false
 
 #Include KeyboardLayout.ahk
 #Persistent
@@ -122,9 +123,19 @@ $~*#Right Up::
     MoveMouseToSelectedWindow()
 return
 
+$~*Tab::
+    global tabPressed
+    tabPressed := true
+return
+
 ; Move mouse to selected window when Alt is released after Alt+Tab
 $~*Alt Up::
-    global altTabLastTime, altTabCooldownMs
+    global altTabLastTime, altTabCooldownMs, tabPressed
+    if (!tabPressed) {
+        tabPressed := false
+        return
+    }
+    tabPressed := false
     ; Only execute if the active window is XamlExplorerHostlslandWindow (Task Switching)
     WinGetClass, activeClass, A
     condition := (activeClass && activeClass != "" && activeClass != "XamlExplorerHostIslandWindow")

@@ -22,7 +22,8 @@ global beforeAltTabClass := ""
 global beforeLWinClass := ""
 global mousePressedClass := ""
 global mousePressedTime := 0
-global taskbarCooldownMs := 3500
+global taskbarCooldownMs := 5500
+global focusUnderMouseGuard := false
 #Include KeyboardLayout.ahk
 #Persistent
 
@@ -89,14 +90,14 @@ tooltipState(){
         . "LWin: " GetKeyState("LWin") " (StateCounter: " LWinState ")`n"
         . "RWin: " GetKeyState("RWin") " (StateCounter: " RWinState ")`n`n"
         . "Physical State (GetKeyState with 'P')`n"
-        . "RControl: " GetKeyState("RCtrl", "P") "`n"
-        . "LControl: " GetKeyState("LCtrl", "P") "`n"
-        . "LShift: " GetKeyState("LShift", "P") "`n"
-        . "RShift: " GetKeyState("RShift", "P") "`n"
-        . "LAlt: " GetKeyState("LAlt", "P") "`n"
-        . "RAlt: " GetKeyState("RAlt", "P") "`n"
-        . "LWin: " GetKeyState("LWin", "P") "`n"
-        . "RWin: " GetKeyState("RWin", "P") "`n`n"
+        . "RControl: " GetKeyState("RCtrl","P") "`n"
+        . "LControl: " GetKeyState("LCtrl","P") "`n"
+        . "LShift: " GetKeyState("LShift","P") "`n"
+        . "RShift: " GetKeyState("RShift","P") "`n"
+        . "LAlt: " GetKeyState("LAlt","P") "`n"
+        . "RAlt: " GetKeyState("RAlt","P") "`n"
+        . "LWin: " GetKeyState("LWin","P") "`n"
+        . "RWin: " GetKeyState("RWin","P") "`n`n"
         . "Press Ctrl+Alt+T to hide/show this tooltip"
 }
 
@@ -129,7 +130,7 @@ $~*#Right Up::
     MoveMouseToSelectedWindow()
 return
 
-$~*Tab::
+$~*!Tab::
     global tabPressed, beforeAltTabClass
     tabPressed := true
     WinGetClass, beforeAltTabClass, A ; keep track of window class before Alt+Tab is pressed
@@ -179,6 +180,7 @@ return
 return
 ; --- Hotkey: Focus Window Under Mouse When Ctrl Pressed, but NOT after recent AltTab ---
 $~LCtrl::
+    Critical
     global altTabLastTime, altTabCooldownMs, mousePressedClass, mousePressedTime, taskbarCooldownMs
     MouseGetPos, , , id ; Gets the unique ID (ahk_id) of the window under the cursor
     WinGetTitle, titleUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID
@@ -186,6 +188,9 @@ $~LCtrl::
     WinGetTitle, activeTitle, A
     WinGetClass, activeClass, A
     ; tooltip, % "titleUnderMouse: " titleUnderMouse " activeTitle: " activeTitle " classUnderMouse: " classUnderMouse " activeClass: " activeClass
+    if (titleUnderMouse == "" && classUnderMouse == "") {
+        return
+    }
     if (titleUnderMouse == activeTitle && classUnderMouse == activeClass) { ; Same window under mouse, act normally
         ; tooltip, % "titleUnderMouse == activeTitle && classUnderMouse == activeClass"
         return
@@ -208,38 +213,320 @@ $~LCtrl::
         ; tooltip, % "altTabLastTime && (A_TickCount - altTabLastTime < altTabCooldownMs)"
         return
     }
-    ; Focus window under mouse
+    focusUnderMouseGuard := true
+return
+$~*LCtrl Up::
+    global focusUnderMouseGuard
+    focusUnderMouseGuard := false
+return
+
+focusUnderMouseHandler(){
+    global focusUnderMouseGuard
+    thisHotkey := A_ThisHotkey ; Save immediately before it can be overwritten by another thread
+
+    ; Snapshot modifier physical state BEFORE WinActivate, since the user may
+    ; release them during the window switch and {Blind} would then drop them.
+    hadLCtrl  := GetKeyState("LCtrl","P")
+    hadRCtrl  := GetKeyState("RCtrl","P")
+    hadLShift := GetKeyState("LShift","P")
+    hadRShift := GetKeyState("RShift","P")
+    hadLAlt   := GetKeyState("LAlt","P")
+    hadRAlt   := GetKeyState("RAlt","P")
+    hadLWin   := GetKeyState("LWin","P")
+    hadRWin   := GetKeyState("RWin","P")
+
     MouseGetPos, , , winId
     if winId
     {
         WinActivate, ahk_id %winId%
+        WinWaitActive, ahk_id %winId%,, 0.5
         altTabLastTime := A_TickCount
     }
-return
+
+    keyPressed := SubStr(thisHotkey, 3) ; Skip "$*" prefix to get just the key name
+
+    ; Re-press any modifiers the user was holding when the hotkey fired but
+    ; may have released during WinActivate.  Only press those that are no
+    ; longer physically held; ones still held are covered by {Blind}.
+    modsDown := ""
+    modsUp   := ""
+    if (hadLCtrl  && !GetKeyState("LCtrl","P")) {
+        modsDown .= "{LCtrl Down}"
+        modsUp   .= "{LCtrl Up}"
+    }
+    if (hadRCtrl  && !GetKeyState("RCtrl","P")) {
+        modsDown .= "{RCtrl Down}"
+        modsUp   .= "{RCtrl Up}"
+    }
+    if (hadLShift && !GetKeyState("LShift","P")) {
+        modsDown .= "{LShift Down}"
+        modsUp   .= "{LShift Up}"
+    }
+    if (hadRShift && !GetKeyState("RShift","P")) {
+        modsDown .= "{RShift Down}"
+        modsUp   .= "{RShift Up}"
+    }
+    if (hadLAlt   && !GetKeyState("LAlt","P")) {
+        modsDown .= "{LAlt Down}"
+        modsUp   .= "{LAlt Up}"
+    }
+    if (hadRAlt   && !GetKeyState("RAlt","P")) {
+        modsDown .= "{RAlt Down}"
+        modsUp   .= "{RAlt Up}"
+    }
+    if (hadLWin   && !GetKeyState("LWin","P")) {
+        modsDown .= "{LWin Down}"
+        modsUp   .= "{LWin Up}"
+    }
+    if (hadRWin   && !GetKeyState("RWin","P")) {
+        modsDown .= "{RWin Down}"
+        modsUp   .= "{RWin Up}"
+    }
+
+    ; {Blind} preserves modifiers still physically held.
+    ; modsDown/modsUp re-inject any that were released during the switch.
+    tooltip, % "modsDown: " modsDown " keyPressed: " keyPressed " modsUp: " modsUp "thisHotkey: " thisHotkey
+    Send {Blind}%modsDown%{%keyPressed%}%modsUp%
+    focusUnderMouseGuard := false
+    return
+}
+
+#If focusUnderMouseGuard
+    ; Left Ctrl + Any key
+    $*a::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*b::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*c::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*d::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*e::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*f::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*g::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*h::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*i::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*j::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*k::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*l::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*m::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*n::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*o::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*p::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*q::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*r::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*s::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*t::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*u::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*v::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*w::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*x::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*y::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*z::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*`::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*0::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*1::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*2::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*3::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*4::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*5::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*6::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*7::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*8::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*9::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*-::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*=::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*[::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*]::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*\::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*;::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*'::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*,::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*.::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*/::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*Tab::
+        Critical
+        focusUnderMouseHandler()
+    return
+    $*CapsLock::
+        Critical
+        focusUnderMouseHandler()
+    return
+#If  ; end if directive
 
 #Include CopilotRemap.ahk
 
+getRCtrlModifierDown(){
+    modsDown := ""
+    if (GetKeyState("RCtrl")) {
+        modsDown .= "{RCtrl Down}"
+    }
+    return modsDown
+}
 ; Arrow keys
 $*>^Up::
-    Send {Blind}{RControl Up}{PgUp}{RControl Down}
+    Critical, On
+    Send {Blind}{Home}
 return
 
 $*>^Down::
-    Send {Blind}{RControl Up}{PgDn}{RControl Down}
+    Critical, On
+    Send {Blind}{End}
 return
 
 $*>^Left::
+    Critical, On
+    modsDown_ := getRCtrlModifierDown()
     if isLeftToRight()
-        Send {Blind}{RControl Up}{Home}{RControl Down}
+        Send {Blind}{RControl Up}{Home}%modsDown_%
     else
-        Send {Blind}{RControl Up}{End}{RControl Down}
+        Send {Blind}{RControl Up}{End}%modsDown_%
 return
 
 $*>^Right::
+    Critical, On
+    modsDown_ := getRCtrlModifierDown()
     if isLeftToRight()
-        Send {Blind}{RControl Up}{End}{RControl Down}
+        Send {Blind}{RControl Up}{End}%modsDown_%
     else
-        Send {Blind}{RControl Up}{Home}{RControl Down}
+        Send {Blind}{RControl Up}{Home}%modsDown_%
 return
 
 $+Pause::

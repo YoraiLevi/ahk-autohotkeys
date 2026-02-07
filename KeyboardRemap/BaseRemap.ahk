@@ -1,3 +1,4 @@
+CoordMode, Mouse, Screen ; Ensures coordinates are relative to the screen, not the active window
 #Include ../std/ENV.ahk
 ; Variables
 global tooltipActive := false  ; Start with tooltip active
@@ -15,7 +16,13 @@ global laptopKeyboard := loadLaptopKeyboardState()
 ; --- "Cooldown" tracking for Alt+Tab switching ---
 global altTabLastTime := 0
 altTabCooldownMs := 500  ; Cooldown in ms before Ctrl window focus will work again
-
+; Global state
+global tabPressed := false
+global beforeAltTabClass := ""
+global beforeLWinClass := ""
+global mousePressedClass := ""
+global mousePressedTime := 0
+global taskbarCooldownMs := 3500
 #Include KeyboardLayout.ahk
 #Persistent
 
@@ -122,9 +129,20 @@ $~*#Right Up::
     MoveMouseToSelectedWindow()
 return
 
+$~*Tab::
+    global tabPressed, beforeAltTabClass
+    tabPressed := true
+    WinGetClass, beforeAltTabClass, A ; keep track of window class before Alt+Tab is pressed
+return
+
 ; Move mouse to selected window when Alt is released after Alt+Tab
 $~*Alt Up::
-    global altTabLastTime, altTabCooldownMs
+    global altTabLastTime, altTabCooldownMs, tabPressed
+    if (!tabPressed) {
+        tabPressed := false
+        return
+    }
+    tabPressed := false
     ; Only execute if the active window is XamlExplorerHostlslandWindow (Task Switching)
     WinGetClass, activeClass, A
     condition := (activeClass && activeClass != "" && activeClass != "XamlExplorerHostIslandWindow")
@@ -132,21 +150,65 @@ $~*Alt Up::
         return
     }
     altTabLastTime := A_TickCount
-    WinWaitNotActive ,ahk_class XamlExplorerHostIslandWindow,, 0.5 ; Not sure if this is the correct syntax but it seem to work
+    WinWaitNotActive ,ahk_class %beforeAltTabClass%,, 0.5 ; Wait for defocus from previous window
+    WinWaitNotActive ,ahk_class XamlExplorerHostIslandWindow,, 0.5 ; And also wait for defocus from Task Switching window
     MoveMouseToSelectedWindow()
 return
 
+$~*LWin::
+    global beforeLWinClass
+    ; track the class of the window before LWin is pressed so mouse can be moved on the automatic window focus switch
+    WinGetClass, beforeLWinClass, A
+return
+$~*#r::
+    global beforeLWinClass, altTabLastTime
+    WinGetClass, activeClass, A
+    if (activeClass == "#32770"){ ; Win+R Run dialog is focused, act normally
+        return
+    }
+    altTabLastTime := A_TickCount
+    WinWaitNotActive ,ahk_class %beforeLWinClass%,, 0.5
+    MoveMouseToSelectedWindow()
+return
+~LButton::
+    global mousePressedClass
+    global mousePressedTime
+    MouseGetPos, , , id
+    WinGetClass, mousePressedClass, ahk_id %id%
+    mousePressedTime := A_TickCount
+return
 ; --- Hotkey: Focus Window Under Mouse When Ctrl Pressed, but NOT after recent AltTab ---
 $~LCtrl::
-    global altTabLastTime, altTabCooldownMs
+    global altTabLastTime, altTabCooldownMs, mousePressedClass, mousePressedTime, taskbarCooldownMs
+    MouseGetPos, , , id ; Gets the unique ID (ahk_id) of the window under the cursor
+    WinGetTitle, titleUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID
+    WinGetClass, classUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID
+    WinGetTitle, activeTitle, A
+    WinGetClass, activeClass, A
+    ; tooltip, % "titleUnderMouse: " titleUnderMouse " activeTitle: " activeTitle " classUnderMouse: " classUnderMouse " activeClass: " activeClass
+    if (titleUnderMouse == activeTitle && classUnderMouse == activeClass) { ; Same window under mouse, act normally
+        ; tooltip, % "titleUnderMouse == activeTitle && classUnderMouse == activeClass"
+        return
+    }
+    if (activeClass == "#32770"){ ; Win+R Run dialog
+        ; tooltip, % "activeClass == #32770"
+        return
+    }
+    if ((classUnderMouse == "Shell_TrayWnd" || mousePressedClass == "Shell_TrayWnd") && (A_TickCount - mousePressedTime < taskbarCooldownMs)){ ; Taskbar
+        tooltip, % "classUnderMouse == Shell_TrayWnd || mousePressedClass == Shell_TrayWnd"
+        return
+    }
     ; Don't switch focus if Ctrl is being held down (key repeat)
     if (A_PriorKey = "LControl") {
-        altTabLastTime := A_TickCount
+        ; tooltip, % "A_PriorKey = LControl"
+        altTabLastTime := A_TickCount ;replace with ctrl specific cooldown timer instead
         return
     }
     if (altTabLastTime && (A_TickCount - altTabLastTime < altTabCooldownMs)) {
+        ; tooltip, % "altTabLastTime && (A_TickCount - altTabLastTime < altTabCooldownMs)"
         return
     }
+    ; Focus window under mouse
     MouseGetPos, , , winId
     if winId
     {

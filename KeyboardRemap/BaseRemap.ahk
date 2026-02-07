@@ -195,7 +195,7 @@ $~LCtrl::
         return
     }
     if ((classUnderMouse == "Shell_TrayWnd" || mousePressedClass == "Shell_TrayWnd") && (A_TickCount - mousePressedTime < taskbarCooldownMs)){ ; Taskbar
-        tooltip, % "classUnderMouse == Shell_TrayWnd || mousePressedClass == Shell_TrayWnd"
+        ; tooltip, % "classUnderMouse == Shell_TrayWnd || mousePressedClass == Shell_TrayWnd"
         return
     }
     ; Don't switch focus if Ctrl is being held down (key repeat)

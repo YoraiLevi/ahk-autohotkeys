@@ -189,6 +189,7 @@ $~LCtrl::
     WinGetClass, activeClass, A
     ; tooltip, % "titleUnderMouse: " titleUnderMouse " activeTitle: " activeTitle " classUnderMouse: " classUnderMouse " activeClass: " activeClass
     if (titleUnderMouse == "" && classUnderMouse == "") {
+        ; tooltip, % "titleUnderMouse == "" && classUnderMouse == """
         return
     }
     if (titleUnderMouse == activeTitle && classUnderMouse == activeClass) { ; Same window under mouse, act normally
@@ -199,7 +200,7 @@ $~LCtrl::
         ; tooltip, % "activeClass == #32770"
         return
     }
-    if ((classUnderMouse == "Shell_TrayWnd" || mousePressedClass == "Shell_TrayWnd") && (A_TickCount - mousePressedTime < taskbarCooldownMs)){ ; Taskbar
+    if (((classUnderMouse == "Shell_TrayWnd" || mousePressedClass == "Shell_TrayWnd") || (classUnderMouse == "Shell_SecondaryTrayWnd" || mousePressedClass == "Shell_SecondaryTrayWnd")) && (A_TickCount - mousePressedTime < taskbarCooldownMs)){ ; Taskbar
         ; tooltip, % "classUnderMouse == Shell_TrayWnd || mousePressedClass == Shell_TrayWnd"
         return
     }
@@ -213,6 +214,7 @@ $~LCtrl::
         ; tooltip, % "altTabLastTime && (A_TickCount - altTabLastTime < altTabCooldownMs)"
         return
     }
+    ; tooltip, % "focusUnderMouseGuard := true"
     focusUnderMouseGuard := true
 return
 $~*LCtrl Up::

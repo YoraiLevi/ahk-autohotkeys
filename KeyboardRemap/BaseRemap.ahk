@@ -285,7 +285,7 @@ focusUnderMouseHandler(){
 
     ; {Blind} preserves modifiers still physically held.
     ; modsDown/modsUp re-inject any that were released during the switch.
-    tooltip, % "modsDown: " modsDown " keyPressed: " keyPressed " modsUp: " modsUp "thisHotkey: " thisHotkey
+    ; tooltip, % "modsDown: " modsDown " keyPressed: " keyPressed " modsUp: " modsUp "thisHotkey: " thisHotkey
     Send {Blind}%modsDown%{%keyPressed%}%modsUp%
     focusUnderMouseGuard := false
     return

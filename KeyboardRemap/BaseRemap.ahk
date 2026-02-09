@@ -28,6 +28,19 @@ global ModifierTriggerCounts := {}
 #Include KeyboardLayout.ahk
 #Persistent
 
+; https://www.autohotkey.com/boards/viewtopic.php?t=118246 - Detecting When Any New Window Is Created or Displayed?
+; DllCall("RegisterShellHookWindow", "UInt", A_ScriptHwnd)
+; OnMessage(DllCall("RegisterWindowMessage", "Str", "SHELLHOOK"), "winCenter")
+
+; winCenter(wParam, lParam) {
+;  If (wParam != WINDOWCREATED := 1)
+;   Return
+;  WinGet
+;  WinGet pname, ProcessName, % winTitle := "ahk_id" lParam
+;  Tooltip, % "Window created: " pname " lParam: " lParam " wParam: " wParam
+;  Return
+; }
+
 loadLaptopKeyboardState() {
     global laptopKeyboardStateFile
     if (FileExist(laptopKeyboardStateFile)) {
@@ -124,6 +137,16 @@ MoveMouseToSelectedWindow(){
     }
 }
 
+; New Window Hotkeys make the mouse follow the window
+$~*^n::
+$~^+w::
+$~!n::
+$~+!n::
+    sleep 150
+    MoveMouseToSelectedWindow()
+return
+
+; Moving Windows makes the mouse follow the window
 $~*#Left Up::
     MoveMouseToSelectedWindow()
 return

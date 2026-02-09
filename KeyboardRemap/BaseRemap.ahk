@@ -24,6 +24,7 @@ global mousePressedClass := ""
 global mousePressedTime := 0
 global taskbarCooldownMs := 5500
 global focusUnderMouseGuard := false
+global ModifierTriggerCounts := {}
 #Include KeyboardLayout.ahk
 #Persistent
 
@@ -171,15 +172,68 @@ $~*#r::
     WinWaitNotActive ,ahk_class %beforeLWinClass%,, 0.5
     MoveMouseToSelectedWindow()
 return
+; Function: Checks if a key (mod) was triggered N times (5) and if the logical state doesn't match the physical state,
+; then resets it by sending a key up event.
+
+; Usage: Call CheckAndResetModifier("LControl")
+; Supports "LControl", "RControl", "LShift", "RShift", "LAlt", "RAlt", "LWin", "RWin"
+
+CheckAndResetModifier(mod := "") {
+    global ModifierTriggerCounts
+    static N := 5
+    keyMap := { "LControl": "LControl", "RControl": "RControl"  , "LShift": "LShift", "RShift": "RShift"        , "LAlt": "LAlt", "RAlt": "RAlt"        , "LWin": "LWin", "RWin": "RWin"}
+
+    keysToCheck := []
+
+    if (mod = "" || mod = "") {
+        ; No mod provided: check all
+        for k, v in keyMap
+            keysToCheck.Push(v)
+    } else {
+        if !(mod in keyMap)
+            return
+        keysToCheck.Push(keyMap[mod])
+    }
+
+    for index, key in keysToCheck
+    {
+        if !ModifierTriggerCounts.HasKey(key)
+            ModifierTriggerCounts[key] := 0
+
+        ModifierTriggerCounts[key] += 1
+
+        if (ModifierTriggerCounts[key] >= N) {
+            ModifierTriggerCounts[key] := 0
+
+            logicalPressed := GetKeyState(key)
+            physicalPressed := GetKeyState(key, "P")
+            if (logicalPressed != physicalPressed) {
+                if (logicalPressed) {
+                    Send, {%key% up}
+                    tooltip, % "Sending {%key% up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
+                }
+            }
+        }
+    }
+    return
+}
+
+; Example integration:
+;   In your hotkeys, after each trigger for a modifier, call:
+;   CheckAndResetModifier("LControl")  ; Replace as appropriate
+;   Or just CheckAndResetModifier() to check all mods
+
 ~LButton::
     global mousePressedClass
     global mousePressedTime
     MouseGetPos, , , id
     WinGetClass, mousePressedClass, ahk_id %id%
     mousePressedTime := A_TickCount
+    CheckAndResetModifier()
 return
 ; --- Hotkey: Focus Window Under Mouse When Ctrl Pressed, but NOT after recent AltTab ---
 $~LCtrl::
+    CheckAndResetModifier()
     Critical
     global altTabLastTime, altTabCooldownMs, mousePressedClass, mousePressedTime, taskbarCooldownMs
     MouseGetPos, , , id ; Gets the unique ID (ahk_id) of the window under the cursor
@@ -222,7 +276,7 @@ $~*LCtrl Up::
     focusUnderMouseGuard := false
 return
 
-focusUnderMouseHandler(){
+focusUnderMouseThenHotkeyHandler(){
     global focusUnderMouseGuard
     thisHotkey := A_ThisHotkey ; Save immediately before it can be overwritten by another thread
 
@@ -293,203 +347,326 @@ focusUnderMouseHandler(){
     return
 }
 
+HotkeyThenFocusUnderMouseHandler(){
+    global focusUnderMouseGuard
+    thisHotkey := A_ThisHotkey ; Save immediately before it can be overwritten by another thread
+
+    ; ; Snapshot modifier physical state BEFORE WinActivate, since the user may
+    ; ; release them during the window switch and {Blind} would then drop them.
+    ; hadLCtrl  := GetKeyState("LCtrl","P")
+    ; hadRCtrl  := GetKeyState("RCtrl","P")
+    ; hadLShift := GetKeyState("LShift","P")
+    ; hadRShift := GetKeyState("RShift","P")
+    ; hadLAlt   := GetKeyState("LAlt","P")
+    ; hadRAlt   := GetKeyState("RAlt","P")
+    ; hadLWin   := GetKeyState("LWin","P")
+    ; hadRWin   := GetKeyState("RWin","P")
+
+    keyPressed := SubStr(thisHotkey, 3) ; Skip "$*" prefix to get just the key name
+
+    ; ; Re-press any modifiers the user was holding when the hotkey fired but
+    ; ; may have released during WinActivate.  Only press those that are no
+    ; ; longer physically held; ones still held are covered by {Blind}.
+    ; modsDown := ""
+    ; modsUp   := ""
+    ; if (hadLCtrl  && !GetKeyState("LCtrl","P")) {
+    ;     modsDown .= "{LCtrl Down}"
+    ;     modsUp   .= "{LCtrl Up}"
+    ; }
+    ; if (hadRCtrl  && !GetKeyState("RCtrl","P")) {
+    ;     modsDown .= "{RCtrl Down}"
+    ;     modsUp   .= "{RCtrl Up}"
+    ; }
+    ; if (hadLShift && !GetKeyState("LShift","P")) {
+    ;     modsDown .= "{LShift Down}"
+    ;     modsUp   .= "{LShift Up}"
+    ; }
+    ; if (hadRShift && !GetKeyState("RShift","P")) {
+    ;     modsDown .= "{RShift Down}"
+    ;     modsUp   .= "{RShift Up}"
+    ; }
+    ; if (hadLAlt   && !GetKeyState("LAlt","P")) {
+    ;     modsDown .= "{LAlt Down}"
+    ;     modsUp   .= "{LAlt Up}"
+    ; }
+    ; if (hadRAlt   && !GetKeyState("RAlt","P")) {
+    ;     modsDown .= "{RAlt Down}"
+    ;     modsUp   .= "{RAlt Up}"
+    ; }
+    ; if (hadLWin   && !GetKeyState("LWin","P")) {
+    ;     modsDown .= "{LWin Down}"
+    ;     modsUp   .= "{LWin Up}"
+    ; }
+    ; if (hadRWin   && !GetKeyState("RWin","P")) {
+    ;     modsDown .= "{RWin Down}"
+    ;     modsUp   .= "{RWin Up}"
+    ; }
+
+    ; ; {Blind} preserves modifiers still physically held.
+    ; ; modsDown/modsUp re-inject any that were released during the switch.
+    ; ; tooltip, % "modsDown: " modsDown " keyPressed: " keyPressed " modsUp: " modsUp "thisHotkey: " thisHotkey
+    ; Send {Blind}%modsDown%{%keyPressed%}%modsUp%
+
+    Send {Blind}{%keyPressed%}
+
+    MouseGetPos, , , winId
+    if winId
+    {
+        WinActivate, ahk_id %winId%
+        WinWaitActive, ahk_id %winId%,, 0.5
+        altTabLastTime := A_TickCount
+    }
+
+    focusUnderMouseGuard := false
+    return
+}
+
 #If focusUnderMouseGuard
     ; Left Ctrl + Any key
     $*a::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*b::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*c::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        HotkeyThenFocusUnderMouseHandler()
     return
     $*d::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*e::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*f::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*g::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*h::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*i::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*j::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*k::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*l::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*m::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*n::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*o::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*p::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*q::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*r::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*s::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*t::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*u::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*v::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*w::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*x::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*y::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*z::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*`::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*0::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*1::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*2::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*3::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*4::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*5::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*6::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*7::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*8::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*9::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*-::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*=::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*[::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*]::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*\::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*;::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*'::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*,::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*.::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*/::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*Tab::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*CapsLock::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
 #If  ; end if directive
 

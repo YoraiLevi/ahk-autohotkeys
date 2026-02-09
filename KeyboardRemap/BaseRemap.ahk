@@ -142,7 +142,7 @@ $~*^n::
 $~^+w::
 $~!n::
 $~+!n::
-    sleep 350
+    sleep 750
     MoveMouseToSelectedWindow()
 return
 
@@ -162,7 +162,7 @@ return
         Send {Blind}{Enter}
         WinWaitNotActive, ahk_id %edgeActiveBefore%,, 0.75
         WinGet, edgeActiveAfter, ID, A
-        tooltip, % "edgeActiveBefore: " edgeActiveBefore " edgeActiveAfter: " edgeActiveAfter
+        ; tooltip, % "edgeActiveBefore: " edgeActiveBefore " edgeActiveAfter: " edgeActiveAfter
         if (edgeActiveBefore != edgeActiveAfter) {
             MoveMouseToSelectedWindow()
         }

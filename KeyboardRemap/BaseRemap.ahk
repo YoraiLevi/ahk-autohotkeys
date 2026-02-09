@@ -142,7 +142,6 @@ $~*^n::
 $~^+w::
 $~!n::
 $~+!n::
-$~^+a::
     sleep 150
     MoveMouseToSelectedWindow()
 return
@@ -154,6 +153,21 @@ return
 $~*#Right Up::
     MoveMouseToSelectedWindow()
 return
+
+; In Edge: if Enter is pressed and the window under the mouse changes, refocus to that window
+#IfWinActive ahk_exe msedge.exe
+    $*Enter::
+        Critical On
+        WinGet, edgeActiveBefore, ID, A
+        Send {Blind}{Enter}
+        WinWaitNotActive, ahk_id %edgeActiveBefore%,, 0.75
+        WinGet, edgeActiveAfter, ID, A
+        tooltip, % "edgeActiveBefore: " edgeActiveBefore " edgeActiveAfter: " edgeActiveAfter
+        if (edgeActiveBefore != edgeActiveAfter) {
+            MoveMouseToSelectedWindow()
+        }
+    return
+#If  ; end Edge Enter directive
 
 $~*!Tab::
     global tabPressed, beforeAltTabClass

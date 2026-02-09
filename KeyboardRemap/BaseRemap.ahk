@@ -142,6 +142,7 @@ $~*^n::
 $~^+w::
 $~!n::
 $~+!n::
+$~^+a::
     sleep 150
     MoveMouseToSelectedWindow()
 return

@@ -163,7 +163,7 @@ ShowWindowInfo(windowId, windowLabel := "") {
 #F7::
     MouseGetPos, , , MouseWinID
     ShowWindowInfo(MouseWinID, "Window under mouse")
-    SetTimer, RemoveMouseTooltip, -25000  ; Remove after 2.5s
+    SetTimer, RemoveMouseTooltip, -25000  ; Remove after 25s
 Return
 
 RemoveMouseTooltip:
@@ -173,7 +173,7 @@ Return
 #F8::
     WinGet, activeWinID, ID, A
     ShowWindowInfo(activeWinID, "Active window")
-    SetTimer, RemoveActiveTooltip, -25000  ; Remove after 2.5s
+    SetTimer, RemoveActiveTooltip, -25000  ; Remove after 25s
 Return
 
 RemoveActiveTooltip:

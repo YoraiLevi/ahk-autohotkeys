@@ -20,12 +20,27 @@ altTabCooldownMs := 500  ; Cooldown in ms before Ctrl window focus will work aga
 global tabPressed := false
 global beforeAltTabClass := ""
 global beforeLWinClass := ""
-global mousePressedClass := ""
+global mousePressedID := ""
 global mousePressedTime := 0
 global taskbarCooldownMs := 5500
 global focusUnderMouseGuard := false
+global ModifierTriggerCounts := {}
+global msedgeWinID := ""
 #Include KeyboardLayout.ahk
 #Persistent
+
+; https://www.autohotkey.com/boards/viewtopic.php?t=118246 - Detecting When Any New Window Is Created or Displayed?
+; DllCall("RegisterShellHookWindow", "UInt", A_ScriptHwnd)
+; OnMessage(DllCall("RegisterWindowMessage", "Str", "SHELLHOOK"), "winCenter")
+
+; winCenter(wParam, lParam) {
+;  If (wParam != WINDOWCREATED := 1)
+;   Return
+;  WinGet
+;  WinGet pname, ProcessName, % winTitle := "ahk_id" lParam
+;  Tooltip, % "Window created: " pname " lParam: " lParam " wParam: " wParam
+;  Return
+; }
 
 loadLaptopKeyboardState() {
     global laptopKeyboardStateFile
@@ -101,6 +116,70 @@ tooltipState(){
         . "Press Ctrl+Alt+T to hide/show this tooltip"
 }
 
+; Generalized function to display window info in a tooltip.
+ShowWindowInfo(windowId, windowLabel := "") {
+    ; Title and Class
+    local winTitle, winClass, winPID, winProc, winProcPath, winMinMax, winStyle, winExStyle, winTransparent, winTransColor, winControlList, winControlListHwnd, winCount, winList
+    WinGetTitle, winTitle, ahk_id %windowId%
+    WinGetClass, winClass, ahk_id %windowId%
+
+    ; Process Info
+    WinGet, winPID, PID, ahk_id %windowId%
+    WinGet, winProc, ProcessName, ahk_id %windowId%
+    WinGet, winProcPath, ProcessPath, ahk_id %windowId%
+
+    ; State and Style
+    WinGet, winMinMax, MinMax, ahk_id %windowId%
+    WinGet, winStyle, Style, ahk_id %windowId%
+    WinGet, winExStyle, ExStyle, ahk_id %windowId%
+    WinGet, winTransparent, Transparent, ahk_id %windowId%
+    WinGet, winTransColor, TransColor, ahk_id %windowId%
+    WinGet, winControlList, ControlList, ahk_id %windowId%
+    WinGet, winControlListHwnd, ControlListHwnd, ahk_id %windowId%
+
+    ; Window List, Count
+    winList0 := 0                ; Initialize to prevent uninitialized warning
+    WinGet, winCount, Count, ahk_id %windowId%
+    WinGet, winList, List, ahk_id %windowId%
+
+    ToolTip, % (windowLabel != "" ? windowLabel ":`n" : "Window Info:`n")
+        . "  id: " windowId "`n"
+        . "  title: " winTitle "`n"
+        . "  class: " winClass "`n"
+        . "  proc: " winProc "`n"
+        . "  procPath: " winProcPath "`n"
+        . "  PID: " winPID "`n"
+        . "  MinMax (0=normal,1=min,2=max): " winMinMax "`n"
+        . "  Style: " winStyle "`n"
+        . "  ExStyle: " winExStyle "`n"
+        . "  Transparent: " winTransparent "`n"
+        . "  TransColor: " winTransColor "`n"
+        . "  ControlList: " winControlList "`n"
+        . "  ControlListHwnd: " winControlListHwnd "`n"
+        . "  Window Count: " winCount "`n"
+        . "  Window List: " (winList0 ? winList0 : "") ; winList returns window handles in winList1 ..
+}
+
+#F7::
+    MouseGetPos, , , MouseWinID
+    ShowWindowInfo(MouseWinID, "Window under mouse")
+    SetTimer, RemoveMouseTooltip, -25000  ; Remove after 25s
+Return
+
+RemoveMouseTooltip:
+    ToolTip
+Return
+
+#F8::
+    WinGet, activeWinID, ID, A
+    ShowWindowInfo(activeWinID, "Active window")
+    SetTimer, RemoveActiveTooltip, -25000  ; Remove after 25s
+Return
+
+RemoveActiveTooltip:
+    ToolTip
+Return
+
 ^!t::  ; Ctrl+Alt+T to toggle the auto-refreshing tooltip
     global tooltipActive
     tooltipActive := !tooltipActive
@@ -123,12 +202,56 @@ MoveMouseToSelectedWindow(){
     }
 }
 
+; New Window Hotkeys make the mouse follow the window
+$~*^n::
+$~^+w::
+$~!n::
+$~+!n::
+    sleep 750
+    MoveMouseToSelectedWindow()
+return
+
+; Moving Windows makes the mouse follow the window
 $~*#Left Up::
     MoveMouseToSelectedWindow()
 return
 $~*#Right Up::
     MoveMouseToSelectedWindow()
 return
+
+; Only for Microsoft Edge main windows (msedge.exe)
+#IfWinActive ahk_exe msedge.exe
+
+    ; On Ctrl+Shift+A + Left Click: pass through input, record and display window info
+    $~*<^+a::
+        Critical On
+        ; Pass through input (let click happen as normal)
+        ; Record the currently active window ID
+        WinGet, id, ID, A
+        msedgeWinID := id
+        ; Display window info in tooltip using ShowWindowInfo from lines 118-163
+        ; ShowWindowInfo(msedgeWinID, "Ctrl+Shift+A+Click in Edge")
+        ; Remove tooltip after 2.5s
+        ; SetTimer, RemoveActiveTooltip, -25000
+    Return
+
+; Existing Chrome_WidgetWin_2 class Enter handler
+#IfWinActive ahk_class Chrome_WidgetWin_2
+    $~*Enter::
+        Critical On
+        if (msedgeWinID != "") {
+            WinWaitNotActive, ahk_class Chrome_WidgetWin_2,, 0.75
+            WinGet, newMsedgeWinID, ID, A
+            if (msedgeWinID != newMsedgeWinID) {
+                msedgeWinID := ""
+                MoveMouseToSelectedWindow()
+            }
+        }
+        Critical Off
+    return
+#If  ; end conditional blocks
+
+
 
 $~*!Tab::
     global tabPressed, beforeAltTabClass
@@ -171,17 +294,107 @@ $~*#r::
     WinWaitNotActive ,ahk_class %beforeLWinClass%,, 0.5
     MoveMouseToSelectedWindow()
 return
-~LButton::
-    global mousePressedClass
+; Function: Checks if a key (mod) was triggered N times (5) and if the logical state doesn't match the physical state,
+; then resets it by sending a key up event.
+
+; Usage: Call CheckAndResetModifier("LControl")
+; Supports "LControl", "RControl", "LShift", "RShift", "LAlt", "RAlt", "LWin", "RWin"
+
+CheckAndResetModifier(mod := "") {
+    global ModifierTriggerCounts
+    static N := 5
+    keyMap := { "LControl": "LControl", "RControl": "RControl"  , "LShift": "LShift", "RShift": "RShift"        , "LAlt": "LAlt", "RAlt": "RAlt"        , "LWin": "LWin", "RWin": "RWin"}
+
+    keysToCheck := []
+
+    if (mod = "" || mod = "") {
+        ; No mod provided: check all
+        for k, v in keyMap
+            keysToCheck.Push(v)
+    } else {
+        if !(mod in keyMap)
+            return
+        keysToCheck.Push(keyMap[mod])
+    }
+
+    for index, key in keysToCheck
+    {
+        if !ModifierTriggerCounts.HasKey(key)
+            ModifierTriggerCounts[key] := 0
+
+        ModifierTriggerCounts[key] += 1
+
+        if (ModifierTriggerCounts[key] >= N) {
+            ModifierTriggerCounts[key] := 0
+
+            logicalPressed := GetKeyState(key)
+            physicalPressed := GetKeyState(key, "P")
+            if (logicalPressed != physicalPressed) {
+                if (logicalPressed) {
+                    Send, {%key% up}
+                    tooltip, % "Sending {%key% up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
+                }
+            }
+        }
+    }
+    return
+}
+
+; Example integration:
+;   In your hotkeys, after each trigger for a modifier, call:
+;   CheckAndResetModifier("LControl")  ; Replace as appropriate
+;   Or just CheckAndResetModifier() to check all mods
+
+$~*LButton::
+    global mousePressedID
     global mousePressedTime
+    global msedgeWinID
     MouseGetPos, , , id
+    mousePressedID := id
+
     WinGetClass, mousePressedClass, ahk_id %id%
+    WinGet, winProc, ProcessName, ahk_id %id%
     mousePressedTime := A_TickCount
+    if (winProc = "msedge.exe") {
+        if (mousePressedClass = "Chrome_WidgetWin_1") {
+            msedgeWinID := id
+            ; ShowWindowInfo(msedgeWinID, "Edge window before LButton click")
+        } else if (mousePressedClass = "Chrome_WidgetWin_2") {
+            Critical On
+            ; wait untills the _2 class is not active
+            WinWaitNotActive, ahk_class Chrome_WidgetWin_2,, 0.75
+            ; check that the new active is Chrome_WidgetWin_1 class and msedge.exe process and also not the previous window
+            WinGet, newMsedgeWinID, ID, A
+            WinGetClass, newMsedgeClass, ahk_id %newMsedgeWinID%
+            WinGet, newWinProc, ProcessName, ahk_id %newMsedgeWinID%
+            ; ShowWindowInfo(msedgeWinID, "Edge window before LButton click")
+
+            if (newWinProc != "msedge.exe" || newMsedgeClass != "Chrome_WidgetWin_1" || newMsedgeWinID == msedgeWinID) {
+            }
+            else {
+                ; we conclude we are in a new edge window
+                msedgeWinID := newMsedgeWinID
+                MoveMouseToSelectedWindow()
+            }
+            Critical Off
+        }
+    }
+    else{
+        msedgeWinID := ""
+    }
+
+    ; ShowWindowInfo(id, "LButton click")
+    ; Remove tooltip after 2.5s
+    ; SetTimer, RemoveActiveTooltip, -25000
+    CheckAndResetModifier()
 return
 ; --- Hotkey: Focus Window Under Mouse When Ctrl Pressed, but NOT after recent AltTab ---
 $~LCtrl::
+    CheckAndResetModifier()
     Critical
-    global altTabLastTime, altTabCooldownMs, mousePressedClass, mousePressedTime, taskbarCooldownMs
+    global altTabLastTime, altTabCooldownMs, mousePressedID, mousePressedTime, taskbarCooldownMs
+    WinGetClass, mousePressedClass, ahk_id %mousePressedID%
+
     MouseGetPos, , , id ; Gets the unique ID (ahk_id) of the window under the cursor
     WinGetTitle, titleUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID
     WinGetClass, classUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID
@@ -222,7 +435,7 @@ $~*LCtrl Up::
     focusUnderMouseGuard := false
 return
 
-focusUnderMouseHandler(){
+focusUnderMouseThenHotkeyHandler(){
     global focusUnderMouseGuard
     thisHotkey := A_ThisHotkey ; Save immediately before it can be overwritten by another thread
 
@@ -293,203 +506,326 @@ focusUnderMouseHandler(){
     return
 }
 
+HotkeyThenFocusUnderMouseHandler(){
+    global focusUnderMouseGuard
+    thisHotkey := A_ThisHotkey ; Save immediately before it can be overwritten by another thread
+
+    ; ; Snapshot modifier physical state BEFORE WinActivate, since the user may
+    ; ; release them during the window switch and {Blind} would then drop them.
+    ; hadLCtrl  := GetKeyState("LCtrl","P")
+    ; hadRCtrl  := GetKeyState("RCtrl","P")
+    ; hadLShift := GetKeyState("LShift","P")
+    ; hadRShift := GetKeyState("RShift","P")
+    ; hadLAlt   := GetKeyState("LAlt","P")
+    ; hadRAlt   := GetKeyState("RAlt","P")
+    ; hadLWin   := GetKeyState("LWin","P")
+    ; hadRWin   := GetKeyState("RWin","P")
+
+    keyPressed := SubStr(thisHotkey, 3) ; Skip "$*" prefix to get just the key name
+
+    ; ; Re-press any modifiers the user was holding when the hotkey fired but
+    ; ; may have released during WinActivate.  Only press those that are no
+    ; ; longer physically held; ones still held are covered by {Blind}.
+    ; modsDown := ""
+    ; modsUp   := ""
+    ; if (hadLCtrl  && !GetKeyState("LCtrl","P")) {
+    ;     modsDown .= "{LCtrl Down}"
+    ;     modsUp   .= "{LCtrl Up}"
+    ; }
+    ; if (hadRCtrl  && !GetKeyState("RCtrl","P")) {
+    ;     modsDown .= "{RCtrl Down}"
+    ;     modsUp   .= "{RCtrl Up}"
+    ; }
+    ; if (hadLShift && !GetKeyState("LShift","P")) {
+    ;     modsDown .= "{LShift Down}"
+    ;     modsUp   .= "{LShift Up}"
+    ; }
+    ; if (hadRShift && !GetKeyState("RShift","P")) {
+    ;     modsDown .= "{RShift Down}"
+    ;     modsUp   .= "{RShift Up}"
+    ; }
+    ; if (hadLAlt   && !GetKeyState("LAlt","P")) {
+    ;     modsDown .= "{LAlt Down}"
+    ;     modsUp   .= "{LAlt Up}"
+    ; }
+    ; if (hadRAlt   && !GetKeyState("RAlt","P")) {
+    ;     modsDown .= "{RAlt Down}"
+    ;     modsUp   .= "{RAlt Up}"
+    ; }
+    ; if (hadLWin   && !GetKeyState("LWin","P")) {
+    ;     modsDown .= "{LWin Down}"
+    ;     modsUp   .= "{LWin Up}"
+    ; }
+    ; if (hadRWin   && !GetKeyState("RWin","P")) {
+    ;     modsDown .= "{RWin Down}"
+    ;     modsUp   .= "{RWin Up}"
+    ; }
+
+    ; ; {Blind} preserves modifiers still physically held.
+    ; ; modsDown/modsUp re-inject any that were released during the switch.
+    ; ; tooltip, % "modsDown: " modsDown " keyPressed: " keyPressed " modsUp: " modsUp "thisHotkey: " thisHotkey
+    ; Send {Blind}%modsDown%{%keyPressed%}%modsUp%
+
+    Send {Blind}{%keyPressed%}
+
+    MouseGetPos, , , winId
+    if winId
+    {
+        WinActivate, ahk_id %winId%
+        WinWaitActive, ahk_id %winId%,, 0.5
+        altTabLastTime := A_TickCount
+    }
+
+    focusUnderMouseGuard := false
+    return
+}
+
 #If focusUnderMouseGuard
     ; Left Ctrl + Any key
     $*a::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*b::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*c::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        HotkeyThenFocusUnderMouseHandler()
     return
     $*d::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*e::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*f::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*g::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*h::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*i::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*j::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*k::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*l::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*m::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*n::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*o::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*p::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*q::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*r::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*s::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*t::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*u::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*v::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*w::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*x::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*y::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*z::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*`::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*0::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*1::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*2::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*3::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*4::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*5::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*6::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*7::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*8::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*9::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*-::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*=::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*[::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*]::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*\::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*;::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*'::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*,::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*.::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*/::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*Tab::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
     $*CapsLock::
+        CheckAndResetModifier()
         Critical
-        focusUnderMouseHandler()
+        focusUnderMouseThenHotkeyHandler()
     return
 #If  ; end if directive
 

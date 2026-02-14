@@ -332,7 +332,7 @@ CheckAndResetModifier(mod := "") {
             if (logicalPressed != physicalPressed) {
                 if (logicalPressed) {
                     Send, {%key% up}
-                    tooltip, % "Sending {%key% up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
+                    ToolTip, % "Sending {" key " up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
                 }
             }
         }

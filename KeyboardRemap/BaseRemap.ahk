@@ -20,11 +20,12 @@ altTabCooldownMs := 500  ; Cooldown in ms before Ctrl window focus will work aga
 global tabPressed := false
 global beforeAltTabClass := ""
 global beforeLWinClass := ""
-global mousePressedClass := ""
+global mousePressedID := ""
 global mousePressedTime := 0
 global taskbarCooldownMs := 5500
 global focusUnderMouseGuard := false
 global ModifierTriggerCounts := {}
+global msedgeWinID := ""
 #Include KeyboardLayout.ahk
 #Persistent
 
@@ -115,6 +116,70 @@ tooltipState(){
         . "Press Ctrl+Alt+T to hide/show this tooltip"
 }
 
+; Generalized function to display window info in a tooltip.
+ShowWindowInfo(windowId, windowLabel := "") {
+    ; Title and Class
+    local winTitle, winClass, winPID, winProc, winProcPath, winMinMax, winStyle, winExStyle, winTransparent, winTransColor, winControlList, winControlListHwnd, winCount, winList
+    WinGetTitle, winTitle, ahk_id %windowId%
+    WinGetClass, winClass, ahk_id %windowId%
+
+    ; Process Info
+    WinGet, winPID, PID, ahk_id %windowId%
+    WinGet, winProc, ProcessName, ahk_id %windowId%
+    WinGet, winProcPath, ProcessPath, ahk_id %windowId%
+
+    ; State and Style
+    WinGet, winMinMax, MinMax, ahk_id %windowId%
+    WinGet, winStyle, Style, ahk_id %windowId%
+    WinGet, winExStyle, ExStyle, ahk_id %windowId%
+    WinGet, winTransparent, Transparent, ahk_id %windowId%
+    WinGet, winTransColor, TransColor, ahk_id %windowId%
+    WinGet, winControlList, ControlList, ahk_id %windowId%
+    WinGet, winControlListHwnd, ControlListHwnd, ahk_id %windowId%
+
+    ; Window List, Count
+    winList0 := 0                ; Initialize to prevent uninitialized warning
+    WinGet, winCount, Count, ahk_id %windowId%
+    WinGet, winList, List, ahk_id %windowId%
+
+    ToolTip, % (windowLabel != "" ? windowLabel ":`n" : "Window Info:`n")
+        . "  id: " windowId "`n"
+        . "  title: " winTitle "`n"
+        . "  class: " winClass "`n"
+        . "  proc: " winProc "`n"
+        . "  procPath: " winProcPath "`n"
+        . "  PID: " winPID "`n"
+        . "  MinMax (0=normal,1=min,2=max): " winMinMax "`n"
+        . "  Style: " winStyle "`n"
+        . "  ExStyle: " winExStyle "`n"
+        . "  Transparent: " winTransparent "`n"
+        . "  TransColor: " winTransColor "`n"
+        . "  ControlList: " winControlList "`n"
+        . "  ControlListHwnd: " winControlListHwnd "`n"
+        . "  Window Count: " winCount "`n"
+        . "  Window List: " (winList0 ? winList0 : "") ; winList returns window handles in winList1 ..
+}
+
+#F7::
+    MouseGetPos, , , MouseWinID
+    ShowWindowInfo(MouseWinID, "Window under mouse")
+    SetTimer, RemoveMouseTooltip, -25000  ; Remove after 2.5s
+Return
+
+RemoveMouseTooltip:
+    ToolTip
+Return
+
+#F8::
+    WinGet, activeWinID, ID, A
+    ShowWindowInfo(activeWinID, "Active window")
+    SetTimer, RemoveActiveTooltip, -25000  ; Remove after 2.5s
+Return
+
+RemoveActiveTooltip:
+    ToolTip
+Return
+
 ^!t::  ; Ctrl+Alt+T to toggle the auto-refreshing tooltip
     global tooltipActive
     tooltipActive := !tooltipActive
@@ -154,20 +219,39 @@ $~*#Right Up::
     MoveMouseToSelectedWindow()
 return
 
-; In Edge: if Enter is pressed and the window under the mouse changes, refocus to that window
+; Only for Microsoft Edge main windows (msedge.exe)
 #IfWinActive ahk_exe msedge.exe
-    $*Enter::
+
+    ; On Ctrl+Shift+A + Left Click: pass through input, record and display window info
+    $~*<^+a::
         Critical On
-        WinGet, edgeActiveBefore, ID, A
-        Send {Blind}{Enter}
-        WinWaitNotActive, ahk_id %edgeActiveBefore%,, 0.75
-        WinGet, edgeActiveAfter, ID, A
-        ; tooltip, % "edgeActiveBefore: " edgeActiveBefore " edgeActiveAfter: " edgeActiveAfter
-        if (edgeActiveBefore != edgeActiveAfter) {
-            MoveMouseToSelectedWindow()
+        ; Pass through input (let click happen as normal)
+        ; Record the currently active window ID
+        WinGet, id, ID, A
+        msedgeWinID := id
+        ; Display window info in tooltip using ShowWindowInfo from lines 118-163
+        ; ShowWindowInfo(msedgeWinID, "Ctrl+Shift+A+Click in Edge")
+        ; Remove tooltip after 2.5s
+        ; SetTimer, RemoveActiveTooltip, -25000
+    Return
+
+; Existing Chrome_WidgetWin_2 class Enter handler
+#IfWinActive ahk_class Chrome_WidgetWin_2
+    $~*Enter::
+        Critical On
+        if (msedgeWinID != "") {
+            WinWaitNotActive, ahk_class Chrome_WidgetWin_2,, 0.75
+            WinGet, newMsedgeWinID, ID, A
+            if (msedgeWinID != newMsedgeWinID) {
+                msedgeWinID := ""
+                MoveMouseToSelectedWindow()
+            }
         }
+        Critical Off
     return
-#If  ; end Edge Enter directive
+#If  ; end conditional blocks
+
+
 
 $~*!Tab::
     global tabPressed, beforeAltTabClass
@@ -261,19 +345,56 @@ CheckAndResetModifier(mod := "") {
 ;   CheckAndResetModifier("LControl")  ; Replace as appropriate
 ;   Or just CheckAndResetModifier() to check all mods
 
-~LButton::
-    global mousePressedClass
+$~*LButton::
+    global mousePressedID
     global mousePressedTime
+    global msedgeWinID
     MouseGetPos, , , id
+    mousePressedID := id
+
     WinGetClass, mousePressedClass, ahk_id %id%
+    WinGet, winProc, ProcessName, ahk_id %id%
     mousePressedTime := A_TickCount
+    if (winProc = "msedge.exe") {
+        if (mousePressedClass = "Chrome_WidgetWin_1") {
+            msedgeWinID := id
+            ; ShowWindowInfo(msedgeWinID, "Edge window before LButton click")
+        } else if (mousePressedClass = "Chrome_WidgetWin_2") {
+            Critical On
+            ; wait untills the _2 class is not active
+            WinWaitNotActive, ahk_class Chrome_WidgetWin_2,, 0.75
+            ; check that the new active is Chrome_WidgetWin_1 class and msedge.exe process and also not the previous window
+            WinGet, newMsedgeWinID, ID, A
+            WinGetClass, newMsedgeClass, ahk_id %newMsedgeWinID%
+            WinGet, newWinProc, ProcessName, ahk_id %newMsedgeWinID%
+            ; ShowWindowInfo(msedgeWinID, "Edge window before LButton click")
+
+            if (newWinProc != "msedge.exe" || newMsedgeClass != "Chrome_WidgetWin_1" || newMsedgeWinID == msedgeWinID) {
+            }
+            else {
+                ; we conclude we are in a new edge window
+                msedgeWinID := newMsedgeWinID
+                MoveMouseToSelectedWindow()
+            }
+            Critical Off
+        }
+    }
+    else{
+        msedgeWinID := ""
+    }
+
+    ; ShowWindowInfo(id, "LButton click")
+    ; Remove tooltip after 2.5s
+    ; SetTimer, RemoveActiveTooltip, -25000
     CheckAndResetModifier()
 return
 ; --- Hotkey: Focus Window Under Mouse When Ctrl Pressed, but NOT after recent AltTab ---
 $~LCtrl::
     CheckAndResetModifier()
     Critical
-    global altTabLastTime, altTabCooldownMs, mousePressedClass, mousePressedTime, taskbarCooldownMs
+    global altTabLastTime, altTabCooldownMs, mousePressedID, mousePressedTime, taskbarCooldownMs
+    WinGetClass, mousePressedClass, ahk_id %mousePressedID%
+
     MouseGetPos, , , id ; Gets the unique ID (ahk_id) of the window under the cursor
     WinGetTitle, titleUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID
     WinGetClass, classUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID

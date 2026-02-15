@@ -229,10 +229,10 @@ return
         ; Record the currently active window ID
         WinGet, id, ID, A
         msedgeWinID := id
-        ; Display window info in tooltip using ShowWindowInfo from lines 118-163
-        ; ShowWindowInfo(msedgeWinID, "Ctrl+Shift+A+Click in Edge")
-        ; Remove tooltip after 2.5s
-        ; SetTimer, RemoveActiveTooltip, -25000
+    ; Display window info in tooltip using ShowWindowInfo from lines 118-163
+    ; ShowWindowInfo(msedgeWinID, "Ctrl+Shift+A+Click in Edge")
+    ; Remove tooltip after 2.5s
+    ; SetTimer, RemoveActiveTooltip, -25000
     Return
 
 ; Existing Chrome_WidgetWin_2 class Enter handler
@@ -250,8 +250,6 @@ return
         Critical Off
     return
 #If  ; end conditional blocks
-
-
 
 $~*!Tab::
     global tabPressed, beforeAltTabClass
@@ -317,6 +315,7 @@ CheckAndResetModifier(mod := "") {
         keysToCheck.Push(keyMap[mod])
     }
 
+    msg := ""
     for index, key in keysToCheck
     {
         if !ModifierTriggerCounts.HasKey(key)
@@ -331,11 +330,17 @@ CheckAndResetModifier(mod := "") {
             physicalPressed := GetKeyState(key, "P")
             if (logicalPressed != physicalPressed) {
                 if (logicalPressed) {
+                    if (msg != "")
+                        msg .= "`n"
+                    msg .= "Sending {" key " up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
                     Send, {%key% up}
-                    ToolTip, % "Sending {" key " up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
                 }
             }
         }
+    }
+    if (msg != ""){
+        ToolTip, %msg%
+        SetTimer, RemoveActiveTooltip, -25000  ; Remove after 25s
     }
     return
 }

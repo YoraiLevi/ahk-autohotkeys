@@ -17,6 +17,8 @@ F11::
 #+Down::
 #+Up::
     ToggleMaximizeRestore()
+    sleep 100
+    MoveMouseToSelectedWindow()
 return
 
 $#F11:: Send { F11 }
@@ -55,10 +57,17 @@ $#Right:: Send, {Blind}!{Right}
 #^Right:: Send, #+{Right}
 
 ; F12 to cycle windows through monitors
-$F12:: Send, #+{Right}
-$+F12:: Send, #+{Left}
+$F12::
+    Send, #+{Right}
+    sleep 100
+    MoveMouseToSelectedWindow()
+return
+$+F12::
+    Send, #+{Left}
+    sleep 100
+    MoveMouseToSelectedWindow()
+return
 $#F12:: Send {F12}
-
 
 $#F10::
     Send, #z
@@ -67,6 +76,8 @@ $#F10::
     WinGetTitle, newPopupTitle, ahk_id %newPopupID%
     if (newPopupTitle = "") {
         Send 42
+        sleep 100
+        MoveMouseToSelectedWindow()
     } else {
         ; Retry the hotkey once if not successful
         Send, #z
@@ -75,11 +86,12 @@ $#F10::
         WinGetTitle, retryPopupTitle, ahk_id %retryPopupID%
         if (retryPopupTitle = "") {
             Send 42
+            sleep 100
+            MoveMouseToSelectedWindow()
         } else {
         }
     }
 return
-
 
 $#F9::
     Send, #z
@@ -88,6 +100,8 @@ $#F9::
     WinGetTitle, newPopupTitle, ahk_id %newPopupID%
     if (newPopupTitle = "") {
         Send 41
+        sleep 100
+        MoveMouseToSelectedWindow()
     } else {
         ; Retry the hotkey once if not successful
         Send, #z
@@ -96,6 +110,8 @@ $#F9::
         WinGetTitle, retryPopupTitle, ahk_id %retryPopupID%
         if (retryPopupTitle = "") {
             Send 41
+            sleep 100
+            MoveMouseToSelectedWindow()
         } else {
         }
     }

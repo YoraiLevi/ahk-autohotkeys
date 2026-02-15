@@ -430,9 +430,14 @@ $~LCtrl::
     ; tooltip, % "focusUnderMouseGuard := true"
     focusUnderMouseGuard := true
 return
-$~*LCtrl Up::
+
+ResetFocusUnderMouseGuard(){
     global focusUnderMouseGuard
     focusUnderMouseGuard := false
+}
+
+$~*LCtrl Up::
+    ResetFocusUnderMouseGuard()
 return
 
 focusUnderMouseThenHotkeyHandler(){
@@ -502,7 +507,7 @@ focusUnderMouseThenHotkeyHandler(){
     ; modsDown/modsUp re-inject any that were released during the switch.
     ; tooltip, % "modsDown: " modsDown " keyPressed: " keyPressed " modsUp: " modsUp "thisHotkey: " thisHotkey
     Send {Blind}%modsDown%{%keyPressed%}%modsUp%
-    focusUnderMouseGuard := false
+    ResetFocusUnderMouseGuard()
     return
 }
 
@@ -576,7 +581,7 @@ HotkeyThenFocusUnderMouseHandler(){
         altTabLastTime := A_TickCount
     }
 
-    focusUnderMouseGuard := false
+    ResetFocusUnderMouseGuard()
     return
 }
 
@@ -594,8 +599,7 @@ HotkeyThenFocusUnderMouseHandler(){
     return
     $*c::
         CheckAndResetModifier()
-        Critical
-        HotkeyThenFocusUnderMouseHandler()
+        ResetFocusUnderMouseGuard()
     return
     $*d::
         CheckAndResetModifier()

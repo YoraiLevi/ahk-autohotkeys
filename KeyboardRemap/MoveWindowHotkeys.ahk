@@ -76,7 +76,6 @@ $#F10::
         if (retryPopupTitle = "") {
             Send 42
         } else {
-            ToolTip, % "Not PopupHost - retried"
         }
     }
 return
@@ -98,7 +97,6 @@ $#F9::
         if (retryPopupTitle = "") {
             Send 41
         } else {
-            ToolTip, % "Not PopupHost - retried"
         }
     }
 return

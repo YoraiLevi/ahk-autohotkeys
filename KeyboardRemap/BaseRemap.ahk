@@ -300,7 +300,7 @@ return
 
 CheckAndResetModifier(mod := "") {
     global ModifierTriggerCounts
-    static N := 5
+    static N := 3
     keyMap := { "LControl": "LControl", "RControl": "RControl"  , "LShift": "LShift", "RShift": "RShift"        , "LAlt": "LAlt", "RAlt": "RAlt"        , "LWin": "LWin", "RWin": "RWin"}
 
     keysToCheck := []
@@ -405,6 +405,8 @@ $~LCtrl::
     WinGetClass, classUnderMouse, ahk_id %id% ; Gets the title using the retrieved ID
     WinGetTitle, activeTitle, A
     WinGetClass, activeClass, A
+    WinGet, activeProc, ProcessName, A
+
     ; tooltip, % "titleUnderMouse: " titleUnderMouse " activeTitle: " activeTitle " classUnderMouse: " classUnderMouse " activeClass: " activeClass
     if (titleUnderMouse == "" && classUnderMouse == "") {
         ; tooltip, % "titleUnderMouse == "" && classUnderMouse == """
@@ -412,6 +414,9 @@ $~LCtrl::
     }
     if (titleUnderMouse == activeTitle && classUnderMouse == activeClass) { ; Same window under mouse, act normally
         ; tooltip, % "titleUnderMouse == activeTitle && classUnderMouse == activeClass"
+        return
+    }
+    if (activeProc == "msedge.exe" && activeTitle == "") {
         return
     }
     if (activeClass == "#32770"){ ; Win+R Run dialog

@@ -1,4 +1,4 @@
-﻿#Include ../std/ENV.ahk
+#Include ../std/ENV.ahk
 #Include Clipboard.ahk
 ; #c::
 ; 	EL =
@@ -11,11 +11,14 @@
     ; MsgBox %selection%
 	Read(TextCleanup(selection),"Microsoft Eva Mobile",1)
 return
+; #w::
+; 	EL =
+; 	GetSelectedText()
+;     ; MsgBox %selection%
+; 	Read(TextCleanup(selection),"VE_Hebrew_Carmit_22kHz",1)
+; return
 #w::
-	EL =
-	GetSelectedText()
-    ; MsgBox %selection%
-	Read(TextCleanup(selection),"VE_Hebrew_Carmit_22kHz",1)
+	Read(TextCleanup(Clipboard),"Microsoft Eva Mobile",1)
 return
 ;   -l              : print list of voices
 ;   -s <integer>    : speed of speech (from -10 to 10)

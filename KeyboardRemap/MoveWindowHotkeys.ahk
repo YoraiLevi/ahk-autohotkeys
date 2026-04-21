@@ -71,7 +71,7 @@ $#F12:: Send {F12}
 
 $#F10::
     Send, #z
-    WinWaitActive, ahk_class XamlExplorerHostlslandWindow,, 0.75
+    WinWaitActive, ahk_class XamlExplorerHostIslandWindow,, 0.75
     WinGet, newPopupID, ID, A
     WinGetTitle, newPopupTitle, ahk_id %newPopupID%
     if (newPopupTitle = "") {
@@ -81,7 +81,7 @@ $#F10::
     } else {
         ; Retry the hotkey once if not successful
         Send, #z
-        WinWaitActive, ahk_class XamlExplorerHostlslandWindow,, 0.75
+        WinWaitActive, ahk_class XamlExplorerHostIslandWindow,, 0.75
         WinGet, retryPopupID, ID, A
         WinGetTitle, retryPopupTitle, ahk_id %retryPopupID%
         if (retryPopupTitle = "") {
@@ -95,7 +95,7 @@ return
 
 $#F9::
     Send, #z
-    WinWaitActive, ahk_class XamlExplorerHostlslandWindow,, 0.75
+    WinWaitActive, ahk_class XamlExplorerHostIslandWindow,, 0.75
     WinGet, newPopupID, ID, A
     WinGetTitle, newPopupTitle, ahk_id %newPopupID%
     if (newPopupTitle = "") {
@@ -105,7 +105,7 @@ $#F9::
     } else {
         ; Retry the hotkey once if not successful
         Send, #z
-        WinWaitActive, ahk_class XamlExplorerHostlslandWindow,, 0.75
+        WinWaitActive, ahk_class XamlExplorerHostIslandWindow,, 0.75
         WinGet, retryPopupID, ID, A
         WinGetTitle, retryPopupTitle, ahk_id %retryPopupID%
         if (retryPopupTitle = "") {

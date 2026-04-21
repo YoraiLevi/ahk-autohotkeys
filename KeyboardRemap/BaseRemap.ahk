@@ -160,20 +160,28 @@ ShowWindowInfo(windowId, windowLabel := "") {
         . "  Window List: " (winList0 ? winList0 : "") ; winList returns window handles in winList1 ..
 }
 
-#F7::
+ShowWindowUnderMouseInfo() {
     MouseGetPos, , , MouseWinID
     ShowWindowInfo(MouseWinID, "Window under mouse")
     SetTimer, RemoveMouseTooltip, -25000  ; Remove after 25s
+}
+
+#F7::
+    ShowWindowUnderMouseInfo()
 Return
 
 RemoveMouseTooltip:
     ToolTip
 Return
 
-#F8::
+ShowWindowActiveInfo() {
     WinGet, activeWinID, ID, A
     ShowWindowInfo(activeWinID, "Active window")
     SetTimer, RemoveActiveTooltip, -25000  ; Remove after 25s
+}
+
+#F8::
+    ShowWindowActiveInfo()
 Return
 
 RemoveActiveTooltip:
@@ -224,32 +232,55 @@ return
 
     ; On Ctrl+Shift+A + Left Click: pass through input, record and display window info
     $~*<^+a::
-        Critical On
+        Critical 50
         ; Pass through input (let click happen as normal)
         ; Record the currently active window ID
         WinGet, id, ID, A
         msedgeWinID := id
-    ; Display window info in tooltip using ShowWindowInfo from lines 118-163
-    ; ShowWindowInfo(msedgeWinID, "Ctrl+Shift+A+Click in Edge")
-    ; Remove tooltip after 2.5s
-    ; SetTimer, RemoveActiveTooltip, -25000
+        ; Also send {Down} (arrow down) key after recording the msedgeWinID
+        ; Wait for the current window (id) to lose focus
+        WinWaitNotActive, ahk_id %id%,, 0.75
+        ; After losing focus, check if we're still in msedge.exe and in Chrome_WidgetWin_2
+        WinGet, newId, ID, A
+        WinGetClass, newClass, ahk_id %newId%
+        WinGet, newProc, ProcessName, ahk_id %newId%
+        if (newProc = "msedge.exe" && newClass = "Chrome_WidgetWin_2") {
+            Sleep, 25
+            SendInput, {Down}
+        }
+   
+        else {
+            _msg := "Error: Could not send {Down}. Reasons:`n"
+            _msg .= "Process=""" newProc """ (expected msedge.exe)`n"
+            _msg .= "Class=""" newClass """ (expected Chrome_WidgetWin_2)`n"
+            Tooltip, %_msg%
+            SetTimer, RemoveActiveTooltip, -2000
+        }
+   
+   
     Return
 
 ; Existing Chrome_WidgetWin_2 class Enter handler
-#IfWinActive ahk_class Chrome_WidgetWin_2
-    $~*Enter::
-        Critical On
-        if (msedgeWinID != "") {
-            WinWaitNotActive, ahk_class Chrome_WidgetWin_2,, 0.75
-            WinGet, newMsedgeWinID, ID, A
-            if (msedgeWinID != newMsedgeWinID) {
-                msedgeWinID := ""
-                MoveMouseToSelectedWindow()
-            }
-        }
-        Critical Off
-    return
-#If  ; end conditional blocks
+$~*Enter::
+$~*NumpadEnter::
+    global msedgeWinID
+    critical 150
+    WinGetClass, _activeClass, A
+    if (_activeClass != "Chrome_WidgetWin_2" || msedgeWinID = ""){
+        return
+    }
+    WinWaitNotActive, ahk_class Chrome_WidgetWin_2,, 0.75
+    WinGet, newMsedgeWinID, ID, A
+    if (msedgeWinID == newMsedgeWinID) {
+    }
+    else {
+        MoveMouseToSelectedWindow()
+        sleep 125
+        MouseGetPos, , , id ; Gets the unique ID (ahk_id) of the window under the cursor
+        WinActivate, ahk_id %id%
+        msedgeWinID := ""
+    }
+return
 
 $~*!Tab::
     global tabPressed, beforeAltTabClass
@@ -332,8 +363,8 @@ CheckAndResetModifier(mod := "") {
                 if (logicalPressed) {
                     if (msg != "")
                         msg .= "`n"
-                    msg .= "Sending {" key " up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
-                    Send, {%key% up}
+                    ; msg .= "Sending {" key " up} logicalPressed: " logicalPressed " physicalPressed: " physicalPressed
+                    ; Send, {%key% up}
                 }
             }
         }
@@ -599,12 +630,10 @@ HotkeyThenFocusUnderMouseHandler(){
     ; Left Ctrl + Any key
     $*a::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*b::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*c::
@@ -613,232 +642,187 @@ HotkeyThenFocusUnderMouseHandler(){
     return
     $*d::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*e::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*f::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*g::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*h::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*i::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*j::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*k::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*l::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*m::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*n::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*o::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*p::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*q::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*r::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*s::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*t::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*u::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
+  
     $*v::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*w::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*x::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*y::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*z::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*`::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*0::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*1::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*2::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*3::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*4::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*5::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*6::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*7::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*8::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*9::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*-::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*=::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*[::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*]::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*\::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*;::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*'::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*,::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*.::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*/::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*Tab::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
     $*CapsLock::
         CheckAndResetModifier()
-        Critical
         focusUnderMouseThenHotkeyHandler()
     return
 #If  ; end if directive
@@ -854,17 +838,17 @@ getRCtrlModifierDown(){
 }
 ; Arrow keys
 $*>^Up::
-    Critical, On
+    Critical 50
     Send {Blind}{Home}
 return
 
 $*>^Down::
-    Critical, On
+    Critical 50
     Send {Blind}{End}
 return
 
 $*>^Left::
-    Critical, On
+    Critical 50
     modsDown_ := getRCtrlModifierDown()
     if isLeftToRight()
         Send {Blind}{RControl Up}{Home}%modsDown_%
@@ -873,7 +857,7 @@ $*>^Left::
 return
 
 $*>^Right::
-    Critical, On
+    Critical 50
     modsDown_ := getRCtrlModifierDown()
     if isLeftToRight()
         Send {Blind}{RControl Up}{End}%modsDown_%

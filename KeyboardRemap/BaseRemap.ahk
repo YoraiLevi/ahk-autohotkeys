@@ -18,7 +18,6 @@ global altTabLastTime := 0
 altTabCooldownMs := 500  ; Cooldown in ms before Ctrl window focus will work again
 ; Global state
 global tabPressed := false
-global beforeAltTabClass := ""
 global beforeLWinClass := ""
 global mousePressedID := ""
 global mousePressedTime := 0
@@ -282,29 +281,36 @@ $~*NumpadEnter::
     }
 return
 
+#If  ; end of "#IfWinActive ahk_exe msedge.exe" - everything below is GLOBAL
+
 $~*!Tab::
-    global tabPressed, beforeAltTabClass
+    global tabPressed
     tabPressed := true
-    WinGetClass, beforeAltTabClass, A ; keep track of window class before Alt+Tab is pressed
 return
 
-; Move mouse to selected window when Alt is released after Alt+Tab
-$~*Alt Up::
-    global altTabLastTime, altTabCooldownMs, tabPressed
+; Move mouse to selected window when Alt is released after Alt+Tab.
+; Use LAlt/RAlt Up explicitly instead of the neutral "Alt Up" because the
+; neutral form is flaky across AltGr layouts and during focus transitions,
+; and can silently fail to fire on Alt release after a task-switch commit.
+$~*LAlt Up::
+$~*RAlt Up::
+    global altTabLastTime, tabPressed
     if (!tabPressed) {
-        tabPressed := false
         return
     }
     tabPressed := false
-    ; Only execute if the active window is XamlExplorerHostlslandWindow (Task Switching)
-    WinGetClass, activeClass, A
-    condition := (activeClass && activeClass != "" && activeClass != "XamlExplorerHostIslandWindow")
-    if (!activeClass && activeClass != "" && activeClass != "XamlExplorerHostIslandWindow") {
+    altTabLastTime := A_TickCount
+    ; Wait for the Windows 11 task switcher to fully dismiss. Until it goes
+    ; away, WinGetPos on "A" (active) can return the switcher or blanks,
+    ; which causes MoveMouseToSelectedWindow to silently do nothing.
+    WinWaitNotActive ,ahk_class XamlExplorerHostIslandWindow,, 0.5
+    Sleep 25 ; Let Windows finalize focus transfer to the newly-selected window
+    WinGetClass, newActiveClass, A
+    ; Bail if the foreground is still the switcher, empty, or otherwise not a
+    ; real target (would produce a useless / wrong cursor jump).
+    if (newActiveClass = "" || newActiveClass = "XamlExplorerHostIslandWindow") {
         return
     }
-    altTabLastTime := A_TickCount
-    WinWaitNotActive ,ahk_class %beforeAltTabClass%,, 0.5 ; Wait for defocus from previous window
-    WinWaitNotActive ,ahk_class XamlExplorerHostIslandWindow,, 0.5 ; And also wait for defocus from Task Switching window
     MoveMouseToSelectedWindow()
 return
 
@@ -426,6 +432,16 @@ $~*LButton::
 return
 ; --- Hotkey: Focus Window Under Mouse When Ctrl Pressed, but NOT after recent AltTab ---
 $~LCtrl::
+    ; Ignore synthesized Ctrl (e.g. Windows+V clipboard history, which pastes
+    ; via an injected Ctrl+V). AHK's hook sees the LLKHF_INJECTED flag and keeps
+    ; "P" (physical) false for injected events, so this cleanly distinguishes
+    ; user key-presses from shell-injected ones. Skipping here prevents arming
+    ; focusUnderMouseGuard (which would steal the paste to the window under the
+    ; mouse) and prevents CheckAndResetModifier from counting the injected event
+    ; and eventually firing a spurious {LCtrl up}.
+    if (!GetKeyState("LCtrl", "P")) {
+        return
+    }
     CheckAndResetModifier()
     Critical
     global altTabLastTime, altTabCooldownMs, mousePressedID, mousePressedTime, taskbarCooldownMs
@@ -495,6 +511,19 @@ focusUnderMouseThenHotkeyHandler(){
     hadRAlt   := GetKeyState("RAlt","P")
     hadLWin   := GetKeyState("LWin","P")
     hadRWin   := GetKeyState("RWin","P")
+
+    ; Safety net for injected key-chords (e.g. Windows+V clipboard history).
+    ; If no modifier is physically held, the triggering event was synthesized
+    ; by another program. Don't redirect focus - just replay the key with
+    ; {Blind} so any logically-held modifiers (injected Ctrl) are preserved,
+    ; and let the paste land in the actual foreground window.
+    if (!hadLCtrl && !hadRCtrl && !hadLShift && !hadRShift
+        && !hadLAlt && !hadRAlt && !hadLWin && !hadRWin) {
+        ResetFocusUnderMouseGuard()
+        keyPressed := SubStr(thisHotkey, 3)
+        Send {Blind}{%keyPressed%}
+        return
+    }
 
     MouseGetPos, , , winId
     if winId

@@ -244,7 +244,8 @@ return
         WinGetClass, newClass, ahk_id %newId%
         WinGet, newProc, ProcessName, ahk_id %newId%
         if (newProc = "msedge.exe" && newClass = "Chrome_WidgetWin_2") {
-            Sleep, 25
+            WinWaitActive, ahk_id %newId%,, 1
+            sleep 500
             SendInput, {Down}
         }
    

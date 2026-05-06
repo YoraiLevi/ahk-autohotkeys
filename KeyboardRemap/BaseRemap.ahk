@@ -238,24 +238,24 @@ return
         msedgeWinID := id
         ; Also send {Down} (arrow down) key after recording the msedgeWinID
         ; Wait for the current window (id) to lose focus
-        WinWaitNotActive, ahk_id %id%,, 0.75
-        ; After losing focus, check if we're still in msedge.exe and in Chrome_WidgetWin_2
-        WinGet, newId, ID, A
-        WinGetClass, newClass, ahk_id %newId%
-        WinGet, newProc, ProcessName, ahk_id %newId%
-        if (newProc = "msedge.exe" && newClass = "Chrome_WidgetWin_2") {
-            WinWaitActive, ahk_id %newId%,, 1
-            sleep 500
-            SendInput, {Down}
-        }
+        ; WinWaitNotActive, ahk_id %id%,, 0.75
+        ; ; After losing focus, check if we're still in msedge.exe and in Chrome_WidgetWin_2
+        ; WinGet, newId, ID, A
+        ; WinGetClass, newClass, ahk_id %newId%
+        ; WinGet, newProc, ProcessName, ahk_id %newId%
+        ; if (newProc = "msedge.exe" && newClass = "Chrome_WidgetWin_2") {
+        ;     WinWaitActive, ahk_id %newId%,, 1
+        ;     sleep 500
+        ;     SendInput, {Down}
+        ; }
    
-        else {
-            _msg := "Error: Could not send {Down}. Reasons:`n"
-            _msg .= "Process=""" newProc """ (expected msedge.exe)`n"
-            _msg .= "Class=""" newClass """ (expected Chrome_WidgetWin_2)`n"
-            Tooltip, %_msg%
-            SetTimer, RemoveActiveTooltip, -2000
-        }
+        ; else {
+        ;     _msg := "Error: Could not send {Down}. Reasons:`n"
+        ;     _msg .= "Process=""" newProc """ (expected msedge.exe)`n"
+        ;     _msg .= "Class=""" newClass """ (expected Chrome_WidgetWin_2)`n"
+        ;     Tooltip, %_msg%
+        ;     SetTimer, RemoveActiveTooltip, -2000
+        ; }
    
    
     Return
